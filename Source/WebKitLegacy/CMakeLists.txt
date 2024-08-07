@@ -19,7 +19,7 @@ set(WebKitLegacy_SOURCES
     WebCoreSupport/SocketStreamHandle.cpp
 )
 
-if (NOT "${PORT}" STREQUAL "MorphOS")
+if (NOT "${PORT}" STREQUAL "MorphOS" AND NOT "${PORT}" STREQUAL "MUI")
     set(WebKitLegacy_SOURCES $(WebKitLegacy_SOURCES)
         WebCoreSupport/WebViewGroup.cpp
         )
@@ -55,3 +55,8 @@ WEBKIT_COPY_FILES(WebKitLegacy_CopyHeaders
     FILES ${WebKitLegacy_PUBLIC_FRAMEWORK_HEADERS}
     FLATTENED
 )
+
+if (${PORT} STREQUAL "MUI")
+    string(TIMESTAMP BUILD_DATE "%d.%m.%Y")
+    add_definitions(-DOWB_BUILD_DATE="${BUILD_DATE}")
+endif ()
