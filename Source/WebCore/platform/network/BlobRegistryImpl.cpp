@@ -50,6 +50,9 @@
 #include <wtf/Scope.h>
 #include <wtf/StdLibExtras.h>
 #include <wtf/WorkQueue.h>
+#if PLATFORM(MUI)
+#include <proto/exec.h>
+#endif
 #include <wtf/text/MakeString.h>
 
 namespace WebCore {
@@ -424,6 +427,13 @@ Vector<RefPtr<BlobDataFileReference>> BlobRegistryImpl::filesInBlob(const URL& u
 
     return result;
 }
+#if PLATFORM(MUI)
+void shutdownBlobRegistryImpl()
+{
+    if (FindTask("org.webkit.BlobUtility") != NULL)
+        delete &blobUtilityQueue();
+}
+#endif
 
 void BlobRegistryImpl::addBlobData(const String& url, RefPtr<BlobData>&& blobData, const std::optional<WebCore::SecurityOriginData>& topOrigin)
 {

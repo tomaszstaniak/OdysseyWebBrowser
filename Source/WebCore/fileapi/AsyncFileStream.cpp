@@ -60,12 +60,18 @@ inline AsyncFileStream::Internals::Internals(FileStreamClient& client)
 {
 }
 
+#if PLATFORM(MUI)
+static NeverDestroyed<MessageQueue<Function<void ()>>> queue;
+#endif
+
 static void callOnFileThread(Function<void ()>&& function)
 {
     ASSERT(isMainThread());
     ASSERT(function);
 
+#if !PLATFORM(MUI)
     static NeverDestroyed<MessageQueue<Function<void ()>>> queue;
+#endif
 
     static std::once_flag createFileThreadOnce;
     std::call_once(createFileThreadOnce, [] {
@@ -75,13 +81,12 @@ static void callOnFileThread(Function<void ()>&& function)
 
                 if (auto function = queue.get().waitForMessage()) {
 
-#if !OS(MORPHOS)
-                    // This can never be null because we never kill the MessageQueue.
-                    ASSERT(function);
+#if PLATFORM(MUI)
+                    if (!function) break;
+#endif
 
                     // This can bever be null because we never queue a function that is null.
                     ASSERT(*function);
-#endif
                     (*function)();
                 }
                 else
@@ -172,5 +177,12 @@ void AsyncFileStream::read(void* buffer, int length)
         };
     });
 }
+
+#if PLATFORM(MUI)
+void AsyncFileStream::shutdown()
+{
+    queue.get().kill();
+}
+#endif
 
 } // namespace WebCore

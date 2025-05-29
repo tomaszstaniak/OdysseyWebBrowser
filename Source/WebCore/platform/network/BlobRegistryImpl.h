@@ -102,5 +102,8 @@ inline void BlobRegistryImpl::setFileDirectory(String&& filePath)
 {
     m_fileDirectory = WTFMove(filePath);
 }
+#if PLATFORM(MUI)
+void shutdownBlobRegistryImpl();
+#endif
 
 } // namespace WebCore

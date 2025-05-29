@@ -64,7 +64,12 @@ class CurlGlobal {
 protected:
     CurlGlobal()
     {
+#if OS(AROS)
+        // 7.76.0 does not have CURL_GLOBAL_NO_GETENV
+        curl_global_init(CURL_GLOBAL_ALL );
+#else
         curl_global_init(CURL_GLOBAL_ALL | CURL_GLOBAL_NO_GETENV);
+#endif
     }
     
     virtual ~CurlGlobal()
@@ -109,6 +114,10 @@ public:
 
     CurlRequestScheduler& scheduler() { return *m_scheduler; }
     WEBCORE_EXPORT CurlStreamScheduler& streamScheduler();
+
+#if PLATFORM(MUI)
+	void stopThread();
+#endif
 
     // Proxy
     const CurlProxySettings& proxySettings() const { return m_proxySettings; }
@@ -267,13 +276,17 @@ public:
     void enableHttpPutRequest();
     void setInFileSizeLarge(curl_off_t);
     void setHttpCustomRequest(const String&);
+#if OS(MORPHOS) || PLATFORM(MUI)
     void setResumeOffset(long long);
     void setRange(long long start, long long end);
+#endif
 
     void enableConnectionOnly();
 
     void enableAcceptEncoding();
+#if OS(MORPHOS) || PLATFORM(MUI)
     void disableAcceptEncoding();
+#endif
     void enableAllowedProtocols();
 
     void setHttpAuthUserPass(const String&, const String&, long authType = CURLAUTH_ANY);
@@ -319,10 +332,12 @@ public:
 
     static long long maxCurlOffT();
 
+#if PLATFORM(MUI)
     // socket
     Expected<curl_socket_t, CURLcode> getActiveSocket();
     CURLcode send(const uint8_t*, size_t, size_t&);
     CURLcode receive(uint8_t*, size_t, size_t&);
+#endif
 
 #ifndef NDEBUG
     void enableVerboseIfUsed();

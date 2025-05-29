@@ -129,7 +129,7 @@ void CurlRequestScheduler::stopThreadIfNoMoreJobRunning()
 #endif
 }
 
-#if OS(MORPHOS)
+#if PLATFORM(MUI)
 void CurlRequestScheduler::stopCurlThread()
 {
 	m_stopped = true;

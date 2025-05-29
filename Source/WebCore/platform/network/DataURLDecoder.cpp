@@ -203,5 +203,13 @@ std::optional<Result> decode(const URL& url, ShouldValidatePadding shouldValidat
     return decodeSynchronously(*task);
 }
 
+#if PLATFORM(MUI)
+void shutdown()
+{
+    /// EVIL!!!!! but triggers completion of detached thread
+    delete &decodeQueue();
+}
+#endif
+
 } // namespace DataURLDecoder
 } // namespace WebCore

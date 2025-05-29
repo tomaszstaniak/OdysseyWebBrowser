@@ -50,7 +50,7 @@ public:
 
     void callOnWorkerThread(Function<void()>&&);
 
-#if OS(MORPHOS)
+#if PLATFORM(MUI)
 	void stopCurlThread();
 #endif
 
