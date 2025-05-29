@@ -35,7 +35,7 @@
 #include <wtf/text/CString.h>
 #include <wtf/text/StringBuilder.h>
 
-#if !OS(WINDOWS)
+#if !OS(WINDOWS) && !PLATFORM(MUI)
 #include <sys/mman.h>
 #include <sys/param.h>
 #include <sys/stat.h>
@@ -46,7 +46,8 @@
 #include <wtf/StdFilesystem.h>
 #endif
 
-#if OS(MORPHOS)
+#if PLATFORM(MUI)
+#include <sys/stat.h>
 #include <unistd.h>
 #endif
 
@@ -243,7 +244,7 @@ String lastComponentOfPathIgnoringTrailingSlash(const String& path)
 #endif
 
     auto position = path.reverseFind(pathSeparator);
-#if OS(MORPHOS)
+#if PLATFORM(MUI)
     if (position == notFound)
         position = path.reverseFind(':');
 #endif
@@ -251,7 +252,7 @@ String lastComponentOfPathIgnoringTrailingSlash(const String& path)
         return path;
 
     size_t endOfSubstring = path.length() - 1;
-#if OS(MORPHOS)
+#if PLATFORM(MUI)
     // If ending to a ':' just return an empty string.
     if (position == endOfSubstring && path[position] != ':') {
 #else
@@ -259,7 +260,7 @@ String lastComponentOfPathIgnoringTrailingSlash(const String& path)
 #endif
         --endOfSubstring;
         position = path.reverseFind(pathSeparator, endOfSubstring);
-#if OS(MORPHOS)
+#if PLATFORM(MUI)
         if (position == notFound)
             position = path.reverseFind(':');
 #endif
@@ -388,7 +389,7 @@ bool MappedFileData::mapFileHandle(PlatformFileHandle handle, FileOpenMode openM
     m_fileSize = size;
     return true;
 }
-#elif OS(MORPHOS)
+#elif PLATFORM(MUI)
 
 bool MappedFileData::mapFileHandle(PlatformFileHandle handle, FileOpenMode openMode, MappedFileMode mapMode)
 {
@@ -533,7 +534,7 @@ void finalizeMappedFileData(MappedFileData& mappedFileData, size_t bytesSize)
     DWORD oldProtection;
     VirtualProtect(map, bytesSize, FILE_MAP_READ, &oldProtection);
     FlushViewOfFile(map, bytesSize);
-#elif OS(MORPHOS)
+#elif PLATFORM(MUI)
 #else
     // Drop the write permission.
     mprotect(map, bytesSize, PROT_READ);

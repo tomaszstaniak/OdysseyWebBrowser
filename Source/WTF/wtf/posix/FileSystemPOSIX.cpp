@@ -32,12 +32,14 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+#if !OS(AROS)
 #include <fnmatch.h>
+#endif
 #include <libgen.h>
 #include <stdio.h>
 #include <sys/file.h>
 #include <sys/stat.h>
-#if !OS(MORPHOS)
+#if !PLATFORM(MUI)
 #include <sys/statvfs.h>
 #endif
 #include <sys/types.h>
@@ -51,8 +53,10 @@
 #include <wtf/text/StringHash.h>
 #include <wtf/HashMap.h>
 
+#if PLATFORM(MUI)
 #if OS(MORPHOS)
 #include <libraries/charsets.h>
+#endif
 #include <proto/dos.h>
 #include <proto/asyncio.h>
 #endif
@@ -239,7 +243,7 @@ bool fileIDsAreEqual(std::optional<PlatformFileID> a, std::optional<PlatformFile
 
 std::optional<uint32_t> volumeFileBlockSize(const String& path)
 {
-#if !OS(MORPHOS)
+#if !PLATFORM(MUI)
     struct statvfs fileStat;
     if (!statvfs(fileSystemRepresentation(path).data(), &fileStat))
         return fileStat.f_frsize;
@@ -252,9 +256,13 @@ String stringFromFileSystemRepresentation(const char* path)
 {
     if (!path)
         return String();
-
+#if PLATFORM(MUI)
 #if OS(MORPHOS)
 	return String(path, strlen(path), MIBENUM_SYSTEM);
+#endif
+#if OS(AROS)
+	return String::fromLatin1(path);
+#endif
 #else
     return String::fromUTF8(path);
 #endif
@@ -262,7 +270,7 @@ String stringFromFileSystemRepresentation(const char* path)
 
 CString fileSystemRepresentation(const String& path)
 {
-#if OS(MORPHOS)
+#if PLATFORM(MUI)
 	// some fixes for unix style path fuckups here...
 	// file:///progdir:foo will give us /progdir:foo, so let's account for that
 	if (path.contains(':') && path.startsWith('/'))
@@ -299,7 +307,7 @@ std::pair<String, PlatformFileHandle> openTemporaryFile(StringView tmpPath, Stri
     PlatformFileHandle handle = invalidPlatformFileHandle;
 
     char buffer[PATH_MAX];
-#if OS(MORPHOS)
+#if OS(MORPHOS) || PLATFORM(MUI)
 	stccpy(buffer, fileSystemRepresentation(tmpPath.toString()).data(), sizeof(buffer));
 	auto prefixadd = fileSystemRepresentation(prefix.toString());
 	if (0 == AddPart(buffer, prefixadd.data(), sizeof(buffer)))
@@ -315,9 +323,11 @@ std::pair<String, PlatformFileHandle> openTemporaryFile(StringView tmpPath, Stri
     handle = mkstemp(buffer);
     if (handle < 0)
         goto end;
- 
+
 #if OS(MORPHOS)
     return { String(buffer, strlen(buffer), MIBENUM_SYSTEM), handle };
+#elif PLATFORM(MUI)
+    return { String::fromLatin1(buffer), handle };
 #else
     return { String::fromUTF8(buffer), handle };
 #endif
@@ -337,21 +347,30 @@ String temporaryFilePathForPrefix(const String& prefix)
 
 void setTemporaryFilePathForPrefix(const char * tmpPath, const String& prefix)
 {
+#if PLATFORM(MUI)
 #if OS(MORPHOS)
 	tmpPathPrefixes.set(prefix, String(tmpPath, strlen(tmpPath), MIBENUM_SYSTEM));
+#endif
+#if OS(AROS)
+	tmpPathPrefixes.set(prefix, String::fromLatin1(tmpPath));
+#endif
 #endif
 }
 
 std::pair<String, PlatformFileHandle> openTemporaryFile(StringView prefix, StringView suffix)
 {
-#if OS(MORPHOS)
+#if PLATFORM(MUI)
 	const char* tmpDir = "PROGDIR:Tmp";
     auto prefixStr = prefix.toString();
 	if (tmpPathPrefixes.contains(prefixStr))
 	{
 		return openTemporaryFile(tmpPathPrefixes.get(prefixStr), prefix, suffix);
 	}
+#if OS(MORPHOS)
 	return openTemporaryFile(String(tmpDir, strlen(tmpDir), MIBENUM_SYSTEM), prefix, suffix);
+#else
+	return openTemporaryFile(String::fromLatin1(tmpDir), prefix, suffix);
+#endif
 #else
     const char* tmpDir = getenv("TMPDIR");
 
@@ -574,7 +593,7 @@ bool makeAllDirectories(const String& path)
 
 String pathByAppendingComponent(StringView path, StringView component)
 {
-#if OS(MORPHOS)
+#if PLATFORM(MUI)
     if (path.endsWith('/') || path.endsWith(':'))
 #else
     if (path.endsWith('/'))

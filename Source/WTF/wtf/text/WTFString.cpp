@@ -481,6 +481,13 @@ CString String::latin1() const
     return result;
 }
 
+#if PLATFORM(MUI)
+CString String::native() const
+{
+    return latin1();
+}
+#endif
+
 Expected<CString, UTF8ConversionError> String::tryGetUTF8(ConversionMode mode) const
 {
     return m_impl ? m_impl->tryGetUTF8(mode) : CString { ""_span };

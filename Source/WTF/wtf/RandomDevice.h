@@ -48,7 +48,7 @@ public:
     void cryptographicallyRandomValues(std::span<uint8_t> buffer);
 
 private:
-#if OS(DARWIN) || OS(FUCHSIA) || OS(WINDOWS) || OS(MORPHOS)
+#if OS(DARWIN) || OS(FUCHSIA) || OS(WINDOWS) || OS(MORPHOS) || OS(AROS)
 #elif OS(UNIX)
     int m_fd { -1 };
 #else

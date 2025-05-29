@@ -86,6 +86,7 @@
     || OS(FUCHSIA)             \
     || OS(OPENBSD)             \
     || OS(HURD)                \
+    || OS(AROS)                \
     || OS(NETBSD)              \
     || OS(QNX)                 \
     || OS(WINDOWS)

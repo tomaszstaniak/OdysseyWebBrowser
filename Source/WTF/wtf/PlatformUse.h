@@ -122,6 +122,18 @@
 #define USE_ACCELERATE 1
 #endif
 
+#if OS(WINDOWS) || OS(AROS) || OS(MORPHOS)
+#define USE_SYSTEM_MALLOC 1
+#endif
+
+#if PLATFORM(MUI)
+/* USE_CAIRO/FREETYPE/CURL/HARFBUZZ/OPENSSL come from cmakeconfig.h.
+   2.46's TextureMapper is GL-only, so OWB's non-GL USE_TEXTURE_MAPPER
+   from 2.34 is not carried over. */
+#define USE_CURL_OPENSSL 1
+#define USE_PTHREADS 1
+#endif
+
 #if CPU(REGISTER64)
 #define USE_JSVALUE64 1
 #else

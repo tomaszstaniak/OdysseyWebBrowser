@@ -113,8 +113,10 @@ public:
     WTF_EXPORT_PRIVATE CString ascii() const;
     WTF_EXPORT_PRIVATE CString latin1() const;
 
-#if OS(MORPHOS)
+#if OS(MORPHOS) || PLATFORM(MUI)
     CString native() const;
+#endif
+#if OS(MORPHOS)
     String(const char * characters, unsigned length, unsigned mib);
 #endif
 

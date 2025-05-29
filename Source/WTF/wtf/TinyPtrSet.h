@@ -98,8 +98,9 @@ public:
     bool isEmpty() const
     {
         bool result = isThin() && !singleEntry();
-        if (result)
+        if (result) {
             ASSERT(m_pointer != reservedValue);
+        }
         return result;
     }
     
