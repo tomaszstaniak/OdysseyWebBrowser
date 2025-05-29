@@ -230,6 +230,11 @@ public:
 
     virtual void setShouldMaintainAspectRatio(bool) { }
 
+#if PLATFORM(MUI)
+    // OWB (AROS): the MUI browser UI selects the decoder output format (RGBA32/YUV) per video element.
+    virtual void setOutputPixelFormat(int) { };
+#endif
+
     virtual bool didPassCORSAccessCheck() const { return false; }
     virtual std::optional<bool> isCrossOrigin(const SecurityOrigin&) const { return std::nullopt; }
 
@@ -293,7 +298,7 @@ public:
     virtual void simulateAudioInterruption() { }
 #endif
 
-#if OS(MORPHOS)
+#if OS(MORPHOS) || PLATFORM(MUI)
 	virtual void selectHLSStream(const String&) { }
 #endif
 

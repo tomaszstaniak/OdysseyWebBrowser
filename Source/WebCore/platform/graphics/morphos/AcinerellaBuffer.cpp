@@ -294,7 +294,8 @@ public:
 			// only set on 1st request (or when we're reading from pos=0)
 			if (0 == m_bufferPositionAbs)
             {
-				m_length = reinterpret_cast<int64_t>(m_response.expectedContentLength());
+				// OWB (AROS x86_64): int64_t is long, not long long, so reinterpret_cast is ill-formed there.
+				m_length = static_cast<int64_t>(m_response.expectedContentLength());
                 
                 D(dprintf("%s(%p): got expected content length %lld\n", __PRETTY_FUNCTION__, this, m_length));
     

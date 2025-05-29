@@ -114,10 +114,16 @@ struct GraphicsDeviceAdapter;
 class SecurityOriginData;
 struct VideoFrameMetadata;
 
+#if OS(MORPHOS) || PLATFORM(MUI)
+class Page;
+#endif
+
 struct MediaEngineSupportParameters {
     ContentType type;
     URL url;
+#if OS(MORPHOS) || PLATFORM(MUI)
     Page* page { nullptr };
+#endif
     bool isMediaSource { false };
     bool isMediaStream { false };
     bool requiresRemotePlayback { false };
@@ -334,7 +340,7 @@ public:
     virtual const Logger& mediaPlayerLogger() = 0;
 #endif
 
-#if OS(MORPHOS)
+#if OS(MORPHOS) || PLATFORM(MUI)
     virtual Page* mediaPlayerPage() { return nullptr; }
 #endif
 
@@ -602,6 +608,11 @@ public:
 
     void setShouldMaintainAspectRatio(bool);
 
+#if PLATFORM(MUI)
+    // OWB (AROS): called by the MUI browser UI (owbbrowserclass) to pick RGBA32/YUV output.
+    void setOutputPixelFormat(int pixfmt);
+#endif
+
     bool didPassCORSAccessCheck() const;
     bool isCrossOrigin(const SecurityOrigin&) const;
 
@@ -675,7 +686,7 @@ public:
     bool isGStreamerHolePunchingEnabled();
 #endif
 
-#if OS(MORPHOS)
+#if OS(MORPHOS) || PLATFORM(MUI)
 	void selectHLSStream(const String& url);
 #endif
 

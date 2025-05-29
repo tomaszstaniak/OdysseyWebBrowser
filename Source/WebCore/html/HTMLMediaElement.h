@@ -485,7 +485,7 @@ public:
     bool hasEnabledTargetAvailabilityListeners();
 #endif
 
-#if OS(MORPHOS)
+#if OS(MORPHOS) || PLATFORM(MUI)
     Page* mediaPlayerPage() final;
 #endif
 

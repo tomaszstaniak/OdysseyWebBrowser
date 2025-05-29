@@ -765,7 +765,7 @@ std::optional<MediaPlayerIdentifier> HTMLMediaElement::playerIdentifier() const
     return m_player ? std::optional { m_player->identifier() } : std::nullopt;
 }
 
-#if OS(MORPHOS)
+#if OS(MORPHOS) || PLATFORM(MUI)
 WebCore::Page* HTMLMediaElement::mediaPlayerPage()
 {
     return document().page();
@@ -5618,7 +5618,7 @@ URL HTMLMediaElement::selectNextSourceChild(ContentType* contentType, String* ke
             MediaEngineSupportParameters parameters;
             parameters.type = ContentType(type);
             parameters.url = mediaURL;
-#if OS(MORPHOS)
+#if OS(MORPHOS) || PLATFORM(MUI)
             parameters.page = document().page();
 #endif
 #if ENABLE(MEDIA_SOURCE)

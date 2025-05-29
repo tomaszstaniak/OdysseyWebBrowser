@@ -14,10 +14,18 @@
 
 #include "HTMLMediaElement.h"
 #include "Frame.h"
+#include "FrameLoader.h"
+#include "LocalFrame.h"
 #include "Page.h"
 #include "CommonVM.h"
 #include <proto/exec.h>
 #include <exec/exec.h>
+
+#if OS(AROS)
+#include <aros/debug.h>
+#undef D
+#define dprintf bug
+#endif
 
 #define D(x) 
 #define DM(x)
@@ -170,12 +178,19 @@ public:
     		return MediaPlayer::SupportsType::IsNotSupported;
 		}
 
+#if !OS(AROS)
         if (!isCGXVideoValid())
         {
     		return MediaPlayer::SupportsType::IsNotSupported;
 		}
+#endif
 
+#if OS(AROS)
+		// OWB (AROS): HLS is always allowed; the MUI UI does not install m_supportHLSForHost.
+		bool withHLS = true;
+#else
 		bool withHLS = MediaPlayerMorphOSSettings::settings().m_supportHLSForHost ? MediaPlayerMorphOSSettings::settings().m_supportHLSForHost(page, host) : true;
+#endif
 
 		DM(dprintf("%s: url '%s' content '%s' ctype '%s' isource %d istream %d profiles %d hlsOK %d host '%s' page %p\n", __func__,
 			parameters.url.string().utf8().data(), parameters.type.raw().utf8().data(), parameters.type.containerType().utf8().data(),
@@ -328,6 +343,19 @@ void MediaPlayerPrivateMorphOS::load(const String& url)
 	m_player->networkStateChanged();
 	m_readyState = MediaPlayer::ReadyState::HaveNothing;
 	m_player->readyStateChanged();
+
+#if OS(AROS)
+	// OWB (AROS): there is no WebKitLegacy/morphos WebProcess to install these, so take the
+	// networking context from the page that owns this player and install a no-op load hook.
+	if (auto* page = m_player->client().mediaPlayerPage()) {
+		if (auto* localMainFrame = dynamicDowncast<LocalFrame>(page->mainFrame()))
+			MediaPlayerMorphOSSettings::settings().m_networkingContextForRequests = localMainFrame->loader().networkingContext();
+	}
+
+	MediaPlayerMorphOSSettings::settings().m_load = [](WebCore::MediaPlayer *player, const String &url, WebCore::MediaPlayerMorphOSInfo& info,
+		MediaPlayerMorphOSStreamSettings &settings, Function<void()> &&yieldFunc) {
+	};
+#endif
 
 	m_acinerella = Acinerella::Acinerella::create(this, url);
 }
@@ -810,10 +838,22 @@ void MediaPlayerPrivateMorphOS::accInitialized(MediaPlayerMorphOSInfo info)
 
 void MediaPlayerPrivateMorphOS::accUpdated(MediaPlayerMorphOSInfo info)
 {
+#if OS(AROS)
+	// OWB (AROS): no m_update host hook; apply the real video size so MSE playback
+	// is not scaled to the 320x240 placeholder when audio is the first stream.
+	if (info.m_width)
+	{
+		m_width = info.m_width;
+		m_height = info.m_height;
+	}
+
+	accSetVideoSize(m_width, m_height);
+#else
 	if (MediaPlayerMorphOSSettings::settings().m_update)
 	{
 		MediaPlayerMorphOSSettings::settings().m_update(m_player, info);
 	}
+#endif
 }
 
 void MediaPlayerPrivateMorphOS::accSetNetworkState(WebCore::MediaPlayerEnums::NetworkState state, const WTF::String &error)

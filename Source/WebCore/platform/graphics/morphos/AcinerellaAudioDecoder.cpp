@@ -13,6 +13,12 @@
 #include <proto/muimaster.h>
 #include <intuition/intuition.h>
 
+#if OS(AROS)
+#include <aros/debug.h>
+#undef D
+#define dprintf bug
+#endif
+
 namespace WebCore {
 namespace Acinerella {
 
