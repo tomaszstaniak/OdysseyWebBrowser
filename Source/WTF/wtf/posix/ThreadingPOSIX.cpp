@@ -89,6 +89,11 @@ int pthread_setname_np(pthread_t thread, const char *name);
 #define SA_RESTART 0
 #endif
 
+#if OS(AROS)
+#include <proto/exec.h>
+#include <semaphore.h>
+#endif
+
 namespace WTF {
 
 Thread::~Thread() = default;
@@ -199,7 +204,7 @@ void Thread::initializePlatformThreading()
     }
     g_wtfConfig.isThreadSuspendResumeSignalConfigured = true;
 
-#if !OS(DARWIN)
+#if !OS(DARWIN) && !OS(AROS)
     globalSemaphoreForSuspendResume.construct(0);
 
 #if !OS(MORPHOS)
@@ -242,7 +247,7 @@ ThreadIdentifier Thread::currentID()
 
 void Thread::initializeCurrentThreadEvenIfNonWTFCreated()
 {
-#if !OS(DARWIN) && !OS(MORPHOS)
+#if !OS(DARWIN) && !OS(MORPHOS) && !OS(AROS)
     RELEASE_ASSERT(g_wtfConfig.isThreadSuspendResumeSignalConfigured);
     sigset_t mask;
     sigemptyset(&mask);
@@ -319,6 +324,9 @@ bool Thread::establishHandle(NewThreadContext* context, std::optional<size_t> st
     pthread_t threadHandle;
     pthread_attr_t attr;
     pthread_attr_init(&attr);
+#if OS(AROS)
+    pthread_attr_setstacksize(&attr, 512 * 1024);
+#endif
 #if HAVE(QOS_CLASSES)
     pthread_attr_set_qos_class_np(&attr, dispatchQOSClass(qos), 0);
 #endif
@@ -379,6 +387,8 @@ void Thread::initializeCurrentThreadInternal(const char* threadName)
 		pthread_setschedparam(pthread_self(), SCHED_MORPHOS, &param);
 	}
 #endif
+#elif OS(AROS)
+    pthread_setname_np(pthread_self(), threadName);
 #else
     UNUSED_PARAM(threadName);
 #endif
@@ -496,6 +506,9 @@ auto Thread::suspend(const ThreadSuspendLocker&) -> Expected<void, PlatformSuspe
     if (result != KERN_SUCCESS)
         return makeUnexpected(result);
     return { };
+#elif PLATFORM(MUI)
+    // no way to suspend thread, report that it is not suspended
+    return makeUnexpected(EINVAL);
 #elif !OS(MORPHOS)
     if (!m_suspendCount) {
         targetThread.store(this);
@@ -523,7 +536,7 @@ void Thread::resume(const ThreadSuspendLocker&)
 {
 #if OS(DARWIN)
     thread_resume(m_platformThread);
-#elif !OS(MORPHOS)
+#elif !PLATFORM(MUI)
     if (m_suspendCount == 1) {
         // When allowing sigThreadSuspendResume interrupt in the signal handler by sigsuspend and SigThreadSuspendResume is actually issued,
         // the signal handler itself will be called once again.
