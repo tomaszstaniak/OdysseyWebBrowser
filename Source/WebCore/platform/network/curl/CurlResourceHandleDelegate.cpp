@@ -193,6 +193,14 @@ void CurlResourceHandleDelegate::updateNetworkLoadMetrics(NetworkLoadMetrics& ne
     networkLoadMetrics.failsTAOCheck = m_handle.failsTAOCheck();
     networkLoadMetrics.hasCrossOriginRedirect = m_handle.hasCrossOriginRedirect();
 }
+#if PLATFORM(MUI)
+void CurlResourceHandleDelegate::curlDidCancel(CurlRequest& request)
+{
+    ASSERT(isMainThread());
+
+    CurlCacheManager::singleton().didCancel(m_handle);
+}
+#endif
 
 } // namespace WebCore
 

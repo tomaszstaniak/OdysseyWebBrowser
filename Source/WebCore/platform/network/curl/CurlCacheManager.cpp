@@ -41,7 +41,7 @@
 #include <wtf/NeverDestroyed.h>
 #include <wtf/text/CString.h>
 
-#define IO_BUFFERSIZE 4096
+#define IO_BUFFERSIZE 40960
 
 namespace WebCore {
 
@@ -129,8 +129,8 @@ void CurlCacheManager::loadIndex()
     // Add entries to index
     Vector<String>::const_iterator it = indexURLs.begin();
     Vector<String>::const_iterator end = indexURLs.end();
-    if (indexURLs.size() > 1)
-        --end; // Last line is empty
+//    if (indexURLs.size() > 1)
+//        --end; // Last line is empty
     while (it != end) {
         String entry = it->trim(deprecatedIsSpaceOrNewline);
         Vector<String> entryComponents = entry.split('\t');
@@ -141,7 +141,11 @@ void CurlCacheManager::loadIndex()
             cacheEntry = makeUnique<CurlCacheEntry>(entry, nullptr, m_cacheDir);
             cacheEntry->isCached(); // force header load
         }
+#if PLATFORM(MUI)
+        else if (4 == entryComponents.size()) {
+#else
         else if (3 == entryComponents.size()) {
+#endif
             cacheEntry = makeUnique<CurlCacheEntry>(entryComponents.at(0), entryComponents.at(1).toDouble(), entryComponents.at(2).toDouble(), m_cacheDir);
         }
 
@@ -185,12 +189,18 @@ void CurlCacheManager::saveIndex()
         {
             if (!entryIt->value->isLoading()) {
                 FileSystem::writeToFile(indexFile, urlLatin1.span());
-                auto sizeAndTime = makeString("\t"_s, String::number(entryIt->value->entrySize()), "\t"_s, String::number(entryIt->value->expireDate().secondsSinceEpoch().seconds()), "\n"_s);
+                auto sizeAndTime = makeString("\t"_s, String::number(entryIt->value->entrySize()), "\t"_s, String::number(entryIt->value->expireDate().secondsSinceEpoch().seconds()),
+#if PLATFORM(MUI)
+                    "\t"_s, entryIt->value->baseName(),
+#endif
+                    "\n"_s);
                 auto cSizeAndTime = sizeAndTime.latin1();
                 FileSystem::writeToFile(indexFile, cSizeAndTime.span());
             }
             else {
+#if !PLATFORM(MUI)
                 entryIt->value->invalidate();
+#endif
             }
         }
         ++it;
@@ -242,6 +252,11 @@ void CurlCacheManager::didReceiveResponse(ResourceHandle& job, ResourceResponse&
             m_LRUEntryList.prependOrMoveToFirst(url);
             m_index.set(url, WTFMove(cacheEntry));
             saveResponseHeaders(url, response);
+#if PLATFORM(MUI)
+            static int counter = 0;
+            if ((++counter & 0x8F) == 0x0)
+                saveIndex();
+#endif
         }
     } else
         invalidateCacheEntry(url);
@@ -339,6 +354,13 @@ void CurlCacheManager::invalidateCacheEntry(const String& url)
 }
 
 void CurlCacheManager::didFail(ResourceHandle &job)
+{
+    const String& url = job.firstRequest().url().string();
+
+    invalidateCacheEntry(url);
+}
+
+void CurlCacheManager::didCancel(ResourceHandle &job)
 {
     const String& url = job.firstRequest().url().string();
 
