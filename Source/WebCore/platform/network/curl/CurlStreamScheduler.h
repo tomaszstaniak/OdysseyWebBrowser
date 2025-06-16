@@ -31,6 +31,24 @@
 
 namespace WebCore {
 
+#if PLATFORM(MUI)
+// OWB/AROS: a bsdsocket.library socket belongs to the task that opened the
+// library, so WebSocket streams cannot run on a thread of their own. The
+// curl request scheduler serves them on its one worker thread and
+// implements this interface (see CurlRequestScheduler).
+class CurlStreamScheduler {
+public:
+    CurlStreamScheduler() { };
+    virtual ~CurlStreamScheduler() { };
+
+    virtual CurlStreamID createStream(const URL&, CurlStream::Client&) = 0;
+    virtual void destroyStream(CurlStreamID) = 0;
+    virtual void send(CurlStreamID, UniqueArray<uint8_t>&&, size_t) = 0;
+
+    virtual void callOnWorkerThread(Function<void()>&&) = 0;
+    virtual void callClientOnMainThread(CurlStreamID, Function<void(CurlStream::Client&)>&&) = 0;
+};
+#else
 class CurlStreamScheduler {
     WTF_MAKE_FAST_ALLOCATED;
     WTF_MAKE_NONCOPYABLE(CurlStreamScheduler);
@@ -63,5 +81,6 @@ private:
     HashMap<CurlStreamID, CurlStream::Client*> m_clientList;
     HashMap<CurlStreamID, std::unique_ptr<CurlStream>> m_streamList;
 };
+#endif
 
 } // namespace WebCore
