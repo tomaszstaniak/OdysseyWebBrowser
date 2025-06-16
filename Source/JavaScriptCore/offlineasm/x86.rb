@@ -443,7 +443,8 @@ class LabelReference
         # https://bugs.webkit.org/show_bug.cgi?id=175104
         used
         if !isWin
-            $asm.puts "movq #{asmLabel}@GOTPCREL(%rip), #{dst.x86Operand(:ptr)}"
+            # OWB/AROS: executables have no GOT, so take the address directly.
+            $asm.puts "lea #{asmLabel}, #{dst.x86Operand(:ptr)}"
         else
             $asm.puts "lea #{asmLabel}@GOTPCREL(%rip), #{dst.x86Operand(:ptr)}"
         end
@@ -564,7 +565,8 @@ class Instruction
         if src.is_a? LabelReference
             src.used
             if !isWin
-                $asm.puts "movq #{src.asmLabel}@GOTPCREL(%rip), #{dst.x86Operand(:ptr)}"
+                # OWB/AROS: no GOT, see LabelReference above.
+                $asm.puts "lea #{src.asmLabel}, #{dst.x86Operand(:ptr)}"
             else
                 $asm.puts "lea #{src.asmLabel}@GOTPCREL(%rip), #{dst.x86Operand(:ptr)}"
             end

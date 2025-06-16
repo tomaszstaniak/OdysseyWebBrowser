@@ -30,7 +30,7 @@
 #include "TypeError.h"
 #include <wtf/Assertions.h>
 
-#if OS(MORPHOS)
+#if PLATFORM(MUI)
 extern "C" { void oomCrash(); }
 #endif
 
@@ -1432,7 +1432,7 @@ inline JSArray* constructArray(ObjectInitializationScope& scope, Structure* arra
     // function will correctly handle an exception being thrown from here.
     // https://bugs.webkit.org/show_bug.cgi?id=169786
     if constexpr (failureMode == AllocationFailureMode::Assert) {
-#if OS(MORPHOS)
+#if OS(MORPHOS) || PLATFORM(MUI)
         if (!array)
             oomCrash();
 #else
