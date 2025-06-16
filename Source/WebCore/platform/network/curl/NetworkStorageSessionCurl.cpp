@@ -35,6 +35,7 @@
 #include <wtf/FileSystem.h>
 #include <wtf/URL.h>
 #include <wtf/text/StringBuilder.h>
+#include <wtf/text/MakeString.h>
 
 namespace WebCore {
 
@@ -54,6 +55,9 @@ static String defaultCookieJarPath()
 	return _cookieJarPath;
 #else
     static constexpr auto defaultFileName = "cookie.jar.db"_s;
+#if PLATFORM(MUI)
+    return makeString("PROGDIR:Conf/"_s, defaultFileName);
+#else
     char* cookieJarPath = getenv("CURL_COOKIE_JAR_PATH");
     if (cookieJarPath)
         return String::fromUTF8(cookieJarPath);
@@ -63,6 +67,7 @@ static String defaultCookieJarPath()
 #else
     // FIXME: https://bugs.webkit.org/show_bug.cgi?id=192417
     return defaultFileName;
+#endif
 #endif
 #endif
 }
