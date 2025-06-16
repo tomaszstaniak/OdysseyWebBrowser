@@ -257,6 +257,8 @@ static String getFormatForSkeleton(const char* locale, const UChar* skeleton, in
     if (!patternGenerator)
         return format;
     status = U_ZERO_ERROR;
+    // OWB-PORT-TODO: OWB 2.34 passed StringView(String(skeleton)).upconvertedCharacters() here; 2.46 has no
+    // String(const UChar*) and skeleton is not NUL-terminated. Check the AROS ICU build accepts const UChar* directly.
     int32_t length = udatpg_getBestPattern(patternGenerator, skeleton, skeletonLength, 0, 0, &status);
     if (needsToGrowToProduceBuffer(status) && length) {
         StringBuffer<UChar> buffer(length);

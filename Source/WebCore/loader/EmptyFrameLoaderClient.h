@@ -190,6 +190,10 @@ private:
     void willCacheResponse(DocumentLoader*, ResourceLoaderIdentifier, NSCachedURLResponse *, CompletionHandler<void(NSCachedURLResponse *)>&&) const final;
 #endif
 
+#if USE(CURL_OPENSSL)
+    void didReceiveSSLSecurityExtension(const ResourceRequest&, const char*) final { };
+#endif
+
     Ref<FrameNetworkingContext> createNetworkingContext() final;
 
     bool isEmptyFrameLoaderClient() const override;

@@ -158,6 +158,8 @@ String truncatedStringForMenuItem(const String& original)
 
 #endif
 
+#if !PLATFORM(MUI)
+
 String inputElementAltText()
 {
     return WEB_UI_STRING_KEY("Submit", "Submit (input element)", "alt text for <input> elements with no alt, title, or value");
@@ -203,8 +205,9 @@ String defaultDetailsSummaryText()
 {
     return WEB_UI_STRING("Details", "text to display in <details> tag when it has no <summary> child");
 }
+#endif
 
-#if ENABLE(CONTEXT_MENUS)
+#if ENABLE(CONTEXT_MENUS) && !PLATFORM(MUI)
 
 String contextMenuItemTagOpenLinkInNewWindow()
 {
@@ -587,7 +590,8 @@ String pdfDocumentTypeDescription()
 }
 #endif // !PLATFORM(COCOA)
 
-#if !PLATFORM(IOS_FAMILY)
+// OWB: PLATFORM(MUI) provides these in platform/mui/LocalizedStringsMorphOS.cpp.
+#if !PLATFORM(IOS_FAMILY) && !PLATFORM(MUI)
 
 String searchMenuNoRecentSearchesText()
 {

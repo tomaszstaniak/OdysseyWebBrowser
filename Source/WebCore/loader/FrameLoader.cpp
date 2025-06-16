@@ -4858,6 +4858,13 @@ void FrameLoader::updateNavigationAPIEntries(std::optional<NavigationNavigationT
     navigation->updateForActivation(m_frame->history().previousItem(), navigationType);
 }
 
+#if USE(CURL_OPENSSL)
+void FrameLoader::didReceiveSSLSecurityExtension(const ResourceRequest& request, const char* securityExtension)
+{
+    m_client->didReceiveSSLSecurityExtension(request, securityExtension);
+}
+#endif
+
 } // namespace WebCore
 
 #undef PAGE_ID

@@ -52,7 +52,7 @@
 #include <wtf/text/CString.h>
 #include <wtf/text/MakeString.h>
 
-#if OS(MORPHOS)
+#if OS(MORPHOS) || PLATFORM(MUI)
 extern "C" { void dprintf(const char *,...); }
 bool shouldLoadResource(const WebCore::ContentExtensions::ResourceLoadInfo& info, WebCore::DocumentLoader& loader);
 #endif
@@ -253,7 +253,8 @@ ContentRuleListResults ContentExtensionsBackend::processContentRuleListsForLoad(
         frameURL = url;
 
     ResourceLoadInfo resourceLoadInfo { url, mainDocumentURL, frameURL, resourceType, mainFrameContext };
-#if OS(MORPHOS)
+#if OS(MORPHOS) || PLATFORM(MUI)
+    // OWB: AdBlock (WebKitLegacy/mui/AdBlock) decides instead of compiled content rule lists.
     ContentRuleListResults results;
     if (!shouldLoadResource(resourceLoadInfo, initiatingDocumentLoader))
     {

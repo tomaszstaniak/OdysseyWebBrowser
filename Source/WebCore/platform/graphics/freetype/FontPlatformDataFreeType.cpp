@@ -38,6 +38,8 @@
 #include FT_TRUETYPE_TABLES_H
 #include <wtf/MathExtras.h>
 #include <wtf/text/WTFString.h>
+// OWB: std::call_once below; not pulled in transitively on AROS.
+#include <mutex>
 
 #if OS(MORPHOS)
 #define _NO_PPCINLINE

@@ -393,6 +393,16 @@ String MIMETypeRegistry::mediaMIMETypeForExtension(StringView extension)
     return mimeTypeForExtension(extension);
 }
 
+#if 0
+// OWB: kept for reference; broken since 2.24, caller in appclass.cpp is disabled too.
+void MIMETypeRegistry::reinitializeSupportedMediaMIMETypes()
+{
+    if(supportedMediaMIMETypes)
+        delete supportedMediaMIMETypes;
+    initializeSupportedMediaMIMETypes();
+}
+#endif
+
 String MIMETypeRegistry::mimeTypeForPath(StringView path)
 {
     auto position = path.reverseFind('.');

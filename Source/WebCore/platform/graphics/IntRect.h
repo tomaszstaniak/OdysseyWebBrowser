@@ -48,6 +48,8 @@ typedef struct _NSRect NSRect;
 
 #if PLATFORM(WIN)
 typedef struct tagRECT RECT;
+#elif PLATFORM(MUI)
+#include "BALBase.h"
 #endif
 
 #if USE(CAIRO) || PLATFORM(GTK)
@@ -206,6 +208,9 @@ public:
 #if PLATFORM(WIN)
     WEBCORE_EXPORT IntRect(const RECT&);
     WEBCORE_EXPORT operator RECT() const;
+#elif PLATFORM(MUI)
+    IntRect(const BalRectangle&);
+    operator BalRectangle() const;
 #endif
 
 #if USE(CAIRO) || PLATFORM(GTK)

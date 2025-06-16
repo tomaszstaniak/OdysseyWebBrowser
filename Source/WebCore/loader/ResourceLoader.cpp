@@ -81,6 +81,10 @@
 #define FRAME_ID ((frame() ? frame()->frameID() : FrameIdentifier()).object().toUInt64())
 #define RESOURCELOADER_RELEASE_LOG(fmt, ...) RELEASE_LOG(Network, "%p - [pageID=%" PRIu64 ", frameID=%" PRIu64 ", frameLoader=%p, resourceID=%" PRIu64 "] ResourceLoader::" fmt, this, PAGE_ID, FRAME_ID, frameLoader(), identifier().toUInt64(), ##__VA_ARGS__)
 
+#if PLATFORM(MUI)
+extern bool canAllocateMemory(long long size);
+#endif
+
 namespace WebCore {
 
 DEFINE_ALLOCATOR_WITH_HEAP_IDENTIFIER(ResourceLoader);
@@ -104,6 +108,11 @@ void ResourceLoader::finishNetworkLoad()
 
     if (RefPtr handle = m_handle) {
         ASSERT(handle->client() == this);
+#if PLATFORM(MUI)
+        // Clear out the ResourceHandle's client so that it doesn't try to call
+        // us back after we release it, unless it has been replaced by someone else.
+        if (handle->client() == this)
+#endif
         handle->clearClient();
         m_handle = nullptr;
     }
@@ -372,6 +381,12 @@ void ResourceLoader::addBuffer(const FragmentedSharedBuffer& buffer, DataPayload
 {
     if (m_options.dataBufferingPolicy == DataBufferingPolicy::DoNotBufferData)
         return;
+
+#if PLATFORM(MUI)
+    // OWB: drop the data rather than buffer more than the system can still allocate.
+    if (!canAllocateMemory(static_cast<long long>(buffer.size()) + m_resourceData.size()))
+        return;
+#endif
 
     if (dataPayloadType == DataPayloadWholeResource)
         m_resourceData.reset();
@@ -876,6 +891,13 @@ void ResourceLoader::didReceiveAuthenticationChallenge(ResourceHandle* handle, c
     challenge.authenticationClient()->receivedRequestToContinueWithoutCredential(challenge);
     ASSERT(!m_handle || !m_handle->hasAuthenticationChallenge());
 }
+#if USE(CURL_OPENSSL)
+void ResourceLoader::didReceiveSSLSecurityExtension(const ResourceRequest& request, const char* securityExtension)
+{
+    RefPtr<ResourceLoader> protector(this);
+    frameLoader()->didReceiveSSLSecurityExtension(request, securityExtension);
+}
+#endif
 
 #if USE(PROTECTION_SPACE_AUTH_CALLBACK)
 void ResourceLoader::canAuthenticateAgainstProtectionSpaceAsync(ResourceHandle*, const ProtectionSpace& protectionSpace, CompletionHandler<void(bool)>&& completionHandler)

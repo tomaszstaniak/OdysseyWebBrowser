@@ -34,6 +34,15 @@
 #include <wtf/Vector.h>
 #include <wtf/text/WTFString.h>
 
+#if PLATFORM(MUI)
+typedef enum
+  {
+    NEWPAGE_POLICY_IGNORE,
+    NEWPAGE_POLICY_WINDOW,
+    NEWPAGE_POLICY_TAB
+  } NewPagePolicy;
+#endif
+
 namespace WebCore {
 
 class FloatRect;
@@ -60,6 +69,12 @@ struct WindowFeatures {
     std::optional<bool> noreferrer { std::nullopt };
 
     Vector<String> additionalFeatures { };
+
+#if PLATFORM(MUI)
+    // OWB: set by WebKitLegacy/mui (WebViewPrivate) and read by WebChromeClient::createWindow.
+    bool donotactivate { false };
+    NewPagePolicy newPagePolicy { NEWPAGE_POLICY_IGNORE };
+#endif
 
     bool wantsNoOpener() const { return (noopener && *noopener) || (noreferrer && *noreferrer); }
     bool wantsNoReferrer() const { return (noreferrer && *noreferrer); }

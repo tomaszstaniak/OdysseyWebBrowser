@@ -37,6 +37,10 @@ static const uint32_t kWoff2Signature = 0x774f4632; // "wOF2"
 #endif
 #endif
 
+#if OS(AROS)
+#include <netinet/in.h>
+#endif
+
 namespace WebCore {
 
 #if !HAVE(WOFF_SUPPORT)

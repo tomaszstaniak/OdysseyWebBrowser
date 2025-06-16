@@ -225,6 +225,10 @@ private:
 #if PLATFORM(IOS_FAMILY)
     RetainPtr<CFDictionaryRef> connectionProperties(ResourceHandle*) override;
 #endif
+#if USE(CURL_OPENSSL)
+    // OWB: forwarded to LocalFrameLoaderClient::didReceiveSSLSecurityExtension (WebKitLegacy/mui).
+    virtual void didReceiveSSLSecurityExtension(const ResourceRequest&, const char*);
+#endif
 
 #if USE(SOUP)
     void loadGResource();

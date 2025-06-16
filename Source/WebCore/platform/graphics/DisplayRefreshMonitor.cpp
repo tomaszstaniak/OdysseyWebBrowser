@@ -38,7 +38,7 @@
 #include "LegacyDisplayRefreshMonitorMac.h"
 #elif PLATFORM(WIN)
 #include "DisplayRefreshMonitorWin.h"
-#elif OS(MORPHOS)
+#elif PLATFORM(MUI)
 #include "DisplayRefreshMonitorMorphOS.h"
 #endif
 
@@ -55,7 +55,7 @@ RefPtr<DisplayRefreshMonitor> DisplayRefreshMonitor::createDefaultDisplayRefresh
 #if PLATFORM(WIN)
     return DisplayRefreshMonitorWin::create(displayID);
 #endif
-#if OS(MORPHOS)
+#if PLATFORM(MUI)
     return DisplayRefreshMonitorMorphOS::create(displayID);
 #endif
     UNUSED_PARAM(displayID);

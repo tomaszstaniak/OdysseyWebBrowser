@@ -36,6 +36,8 @@
 #include "RemoteFrameClient.h"
 #include "SecurityOrigin.h"
 #include "SerializedScriptValue.h"
+// OWB: an AROS system header can leave an Exception macro defined; JSC uses the name.
+#undef Exception
 #include <JavaScriptCore/JSCJSValue.h>
 #include <JavaScriptCore/JSCJSValueInlines.h>
 #include <wtf/TZoneMallocInlines.h>

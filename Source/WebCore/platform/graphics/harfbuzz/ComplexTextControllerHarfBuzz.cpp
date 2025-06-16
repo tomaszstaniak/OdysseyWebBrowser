@@ -24,6 +24,7 @@
  */
 
 #include "config.h"
+#if USE(HARFBUZZ)
 #include "ComplexTextController.h"
 
 #include "CairoUtilities.h"
@@ -581,3 +582,4 @@ void ComplexTextController::collectComplexTextRunsForCharacters(std::span<const 
 }
 
 } // namespace WebCore
+#endif

@@ -37,10 +37,11 @@
 #include <netinet/in.h>
 #endif
 
-#if OS(MORPHOS)
+#if PLATFORM(MUI)
 extern "C" {
 #define AF_INET  2
 #define AF_INET6 10
+#if OS(MORPHOS)
 	struct in6_addr {
 	   unsigned char   s6_addr[16];   /* IPv6 address */
 	};
@@ -51,6 +52,7 @@ extern "C" {
 	   struct in6_addr sin6_addr;     /* IPv6 address */
 	   uint32_t        sin6_scope_id; /* Scope ID (new in 2.4) */
 	};
+#endif
 }
 #endif
 

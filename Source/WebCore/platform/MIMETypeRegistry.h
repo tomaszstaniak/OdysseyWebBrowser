@@ -143,6 +143,13 @@ public:
     WEBCORE_EXPORT static Vector<String> allowedFileExtensions(const Vector<String>& mimeTypes, const Vector<String>& extensions);
     WEBCORE_EXPORT static bool isJPEGMIMEType(const String& mimeType);
     WEBCORE_EXPORT static bool isWebArchiveMIMEType(const String& mimeType);
+
+#if PLATFORM(MUI)
+    // OWB: declared for appclass.cpp; the definition and its caller are both
+    // under #if 0 since 2.24 (media MIME types are now built lazily).
+    static void reinitializeSupportedMediaMIMETypes();
+#endif
+
 private:
     // Check to see if the MIME type is not suitable for being loaded as a text
     // document in a frame. Only valid for MIME types begining with "text/".

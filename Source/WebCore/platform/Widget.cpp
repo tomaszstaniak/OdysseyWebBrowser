@@ -251,7 +251,8 @@ FloatPoint Widget::convertFromContainingView(const FloatPoint& parentPoint) cons
     return convertFromContainingView(IntPoint(parentPoint));
 }
 
-#if !PLATFORM(COCOA)
+// OWB: PLATFORM(MUI) implements these in platform/mui/WidgetMorphOS.cpp.
+#if !PLATFORM(COCOA) && !PLATFORM(MUI)
 
 Widget::Widget(PlatformWidget widget)
 {
@@ -292,6 +293,10 @@ void Widget::setIsSelected(bool)
 void Widget::paint(GraphicsContext&, const IntRect&, SecurityOriginPaintPolicy, RegionContext*)
 {
 }
+
+#endif // !PLATFORM(COCOA) && !PLATFORM(MUI)
+
+#if !PLATFORM(COCOA)
 
 IntRect Widget::convertFromRootToContainingWindow(const Widget*, const IntRect& rect)
 {

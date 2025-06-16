@@ -231,10 +231,10 @@ bool Font::variantCapsSupportedForSynthesis(FontVariantCaps fontVariantCaps) con
 
 bool Font::platformSupportsCodePoint(char32_t character, std::optional<char32_t> variation) const
 {
-    CairoFtFaceLocker cairoFtFaceLocker(m_platformData.scaledFont());
-    if (FT_Face face = cairoFtFaceLocker.ftFace())
-        return variation ? !!FT_Face_GetCharVariantIndex(face, character, variation.value()) : !!FcFreeTypeCharIndex(face, character);
-
+//    CairoFtFaceLocker cairoFtFaceLocker(m_platformData.scaledFont());
+//    if (FT_Face face = cairoFtFaceLocker.ftFace())
+//        return variation ? !!FT_Face_GetCharVariantIndex(face, character, variation.value()) : !!FcFreeTypeCharIndex(face, character);
+//
     return false;
 }
 

@@ -32,6 +32,10 @@
 #include <wtf/UUID.h>
 #include <wtf/WindowsExtras.h>
 
+#if PLATFORM(MUI)
+#include "BALBase.h"
+#endif
+
 namespace WebCore {
 
 const double ForceAtClick = 1;
@@ -83,6 +87,10 @@ public:
 
     Vector<PlatformMouseEvent> coalescedEvents() const { return m_coalescedEvents; }
     Vector<PlatformMouseEvent> predictedEvents() const { return m_predictedEvents; }
+
+#if PLATFORM(MUI)
+        PlatformMouseEvent(BalEventButton*);
+#endif
 
 #if PLATFORM(MAC)
     int eventNumber() const { return m_eventNumber; }
