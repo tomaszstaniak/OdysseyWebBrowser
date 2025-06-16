@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) 2004-2017 Apple Inc. All rights reserved.
  *
@@ -92,6 +93,9 @@ public:
     WEBCORE_EXPORT static RefPtr<ResourceHandle> create(NetworkingContext*, const ResourceRequest&, ResourceHandleClient*, bool defersLoading, bool shouldContentSniff, ContentEncodingSniffingPolicy, RefPtr<SecurityOrigin>&& sourceOrigin, bool isMainFrameNavigation);
     WEBCORE_EXPORT static void loadResourceSynchronously(NetworkingContext*, const ResourceRequest&, StoredCredentialsPolicy, SecurityOrigin*, ResourceError&, ResourceResponse&, Vector<uint8_t>& data);
     WEBCORE_EXPORT virtual ~ResourceHandle();
+#if PLATFORM(MUI)
+    WEBCORE_EXPORT static RefPtr<ResourceHandle> create2(NetworkingContext*, const ResourceRequest&, ResourceHandleClient*, bool defersLoading, bool shouldContentSniff, bool shouldContentEncodingSniff);
+#endif
 
 #if PLATFORM(COCOA)
     void willSendRequest(ResourceRequest&&, ResourceResponse&&, CompletionHandler<void(ResourceRequest&&)>&&);
@@ -127,7 +131,7 @@ public:
     void unschedule(WTF::SchedulePair&);
 #endif
 
-#if OS(MORPHOS)
+#if OS(MORPHOS) || PLATFORM(MUI)
     WEBCORE_EXPORT static void setHostAllowsAnyHTTPSCertificate(const String&);
     static void setClientCertificateInfo(const String&, const String&, const String&);
     static void clearClientCertificateInfo(const String&);
@@ -171,6 +175,9 @@ public:
     // The client may be 0, in which case no callbacks will be made.
     WEBCORE_EXPORT ResourceHandleClient* client() const;
     WEBCORE_EXPORT void clearClient();
+#if PLATFORM(MUI)
+    void setClientInternal(ResourceHandleClient*);
+#endif
 
     WEBCORE_EXPORT void setDefersLoading(bool);
 

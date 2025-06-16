@@ -167,6 +167,12 @@ void CurlRequest::cancel()
 
     auto& scheduler = CurlContext::singleton().scheduler();
 
+#if PLATFORM(MUI)
+    callClient([this, protectedThis = makeRef(*this)](CurlRequest& request, CurlRequestClient& client) {
+        client.curlDidCancel(request);
+    });
+#endif
+
     if (needToInvokeDidCancelTransfer()) {
         runOnWorkerThreadIfRequired([this, protectedThis = Ref { *this }]() {
             didCancelTransfer();
@@ -313,6 +319,11 @@ CURL* CurlRequest::setupTransfer()
     // Disable automatic decompression when downloading to a file
     if (m_isEnabledDownloadToFile || m_disableAcceptEncoding)
         m_curlHandle->disableAcceptEncoding();
+
+#if PLATFORM(MUI)
+    if (m_disableEncoding)
+        m_curlHandle->disableAcceptEncoding();
+#endif
 
     m_performStartTime = MonotonicTime::now();
 

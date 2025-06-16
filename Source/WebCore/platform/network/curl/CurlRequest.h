@@ -84,9 +84,14 @@ public:
     WEBCORE_EXPORT void suspend();
     WEBCORE_EXPORT void resume();
 
+#if PLATFORM(MUI)
     long long resumeOffset() { return m_downloadResumeOffset; }
     void setResumeOffset(long long offset) { m_downloadResumeOffset = offset; }
+    void setDisableEncoding(bool val) { m_disableEncoding = val; }
+#endif
+#if OS(MORPHOS) || PLATFORM(MUI)
     void setResumeOffset(long long offset, long long endoffset) { m_downloadResumeOffset = offset; m_downloadEndOffset = endoffset; }
+#endif
 
     const ResourceRequest& resourceRequest() const { return m_request; }
     bool isCancelled();
@@ -229,10 +234,13 @@ private:
     bool m_deletesDownloadFileOnCancelOrError { false };
     String m_downloadFilePath;
     FileSystem::PlatformFileHandle m_downloadFileHandle { FileSystem::invalidPlatformFileHandle };
+#if PLATFORM(MUI)
     long long m_downloadResumeOffset { 0 };
     long long m_downloadEndOffset { 0 };
     bool m_downloadPendingResume { false };
     static String m_downloadPath;
+    bool m_disableEncoding { false };
+#endif
 
     bool m_captureExtraMetrics;
     HTTPHeaderMap m_requestHeaders;

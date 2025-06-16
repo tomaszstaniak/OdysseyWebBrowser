@@ -25,19 +25,34 @@
 
 #pragma once
 
+#if defined(__WEBCORELEAKS__)
+#include <WebCore/AuthenticationChallenge.h>
+#include <WebCore/NetworkingContext.h>
+#include <WebCore/ResourceHandle.h>
+#include <WebCore/ResourceHandleClient.h>
+#include <WebCore/ResourceRequest.h>
+#include <WebCore/Timer.h>
+#else
 #include "AuthenticationChallenge.h"
 #include "NetworkingContext.h"
 #include "ResourceHandle.h"
 #include "ResourceHandleClient.h"
 #include "ResourceRequest.h"
 #include "Timer.h"
+#endif
 #include <wtf/MonotonicTime.h>
 
 #if USE(CURL)
+#if defined(__WEBCORELEAKS__)
+#include <WebCore/CurlRequest.h>
+#include <WebCore/SynchronousLoaderClient.h>
+#else
 #include "CurlRequest.h"
 #include "SynchronousLoaderClient.h"
+#endif
 #include <wtf/MessageQueue.h>
 #include <wtf/MonotonicTime.h>
+enum { STATUS_CONNECTING, STATUS_WAITING_DATA, STATUS_RECEIVING_DATA, STATUS_SENDING_DATA };
 #endif
 
 #if PLATFORM(COCOA)
@@ -130,6 +145,17 @@ public:
     bool m_hasCrossOriginRedirect { false };
     bool m_isCrossOrigin { false };
     bool m_isMainFrameNavigation { false };
+
+#if PLATFORM(MUI)
+    // for networklistclass, unimplemented since 2.24
+    long long m_received { 0 };
+    long long m_totalSize { 0 };
+    unsigned long m_state { 0 };
+    unsigned long m_bodySize { 0 };
+    unsigned long m_bodyDataSent { 0 };
+
+    bool m_startCurlRequestAtStart { true };
+#endif
 #if PLATFORM(COCOA)
     bool m_startWhenScheduled { false };
 #endif

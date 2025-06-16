@@ -38,6 +38,10 @@
 #include <wtf/StringExtras.h>
 #include <wtf/text/MakeString.h>
 
+extern "C" {
+    void *memmem(const void *h0, size_t k, const void *n0, size_t l);
+}
+
 namespace WebCore {
 
 static std::optional<CString> extractBoundary(const CurlResponse& response)
