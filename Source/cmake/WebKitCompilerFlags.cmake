@@ -162,6 +162,10 @@ if (COMPILER_IS_GCC_OR_CLANG)
 
         WEBKIT_PREPEND_GLOBAL_COMPILER_FLAGS(-Wno-tautological-compare)
 
+        if ("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "i386")
+            WEBKIT_APPEND_GLOBAL_COMPILER_FLAGS(-march=i686)
+        endif ()
+
         if (WIN32)
             WEBKIT_APPEND_GLOBAL_COMPILER_FLAGS(-mno-ms-bitfields)
             WEBKIT_PREPEND_GLOBAL_COMPILER_FLAGS(-Wno-unknown-pragmas)
@@ -226,6 +230,12 @@ if (COMPILER_IS_GCC_OR_CLANG)
         endif ()
     endif ()
 
+    if (${PORT} STREQUAL "MUI")
+    # OWB 2.34 also listed -Werror here, but its own probe failed (with
+    # -Wformat-security and no -Wformat), so it was never in effect.
+    WEBKIT_PREPEND_GLOBAL_COMPILER_FLAGS(-Wno-unused-parameter
+                                         -Wno-write-strings)
+    endif ()
     # Makes builds faster. The GCC manual warns about the possibility that the assembler being
     # used may not support input from a pipe, but in practice the toolchains we support all do.
     WEBKIT_PREPEND_GLOBAL_COMPILER_FLAGS(-pipe)

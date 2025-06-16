@@ -116,6 +116,14 @@ message(STATUS "  Linker supports --gc-sections - ${LD_SUPPORTS_GC_SECTIONS}")
 # MorphOS
 set(LD_SUPPORTS_DISABLE_NEW_DTAGS FALSE)
 
+# AROS (OWB): executables are relocatable ELF linked with "ld -r" through
+# collect-aros, which rejects --gc-sections ("requires either an entry or an
+# undefined symbol"). Every CMake configure check links a test program, so
+# with --gc-sections all of them fail and features are wrongly turned off.
+if (PORT STREQUAL "MUI")
+    set(LD_SUPPORTS_GC_SECTIONS FALSE)
+endif ()
+
 # Determine whether the archiver in use supports thin archives.
 separate_arguments(AR_VERSION_COMMAND UNIX_COMMAND "${CMAKE_AR} -V")
 execute_process(
