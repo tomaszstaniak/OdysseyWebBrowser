@@ -73,7 +73,13 @@ void ShareableBitmap::paint(GraphicsContext& context, const IntPoint& dstPoint, 
 void ShareableBitmap::paint(GraphicsContext& context, float scaleFactor, const IntPoint& dstPoint, const IntRect& srcRect)
 {
     RefPtr<cairo_surface_t> surface = createSurfaceFromData(mutableSpan().data(), size());
+#if CAIRO_VERSION >= CAIRO_VERSION_ENCODE(1, 14, 0)
     cairo_surface_set_device_scale(surface.get(), scaleFactor, scaleFactor);
+#else
+    // cairo < 1.14 (AROS ABIv11 SDK: 1.12.14) has no device scale. Callers on
+    // such ports paint at device scale 1 only.
+    ASSERT_UNUSED(scaleFactor, scaleFactor == 1);
+#endif
     FloatRect destRect(dstPoint, srcRect.size());
 
     ASSERT(context.hasPlatformContext());
