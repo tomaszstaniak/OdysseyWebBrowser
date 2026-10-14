@@ -114,10 +114,13 @@ RefPtr<ResourceHandle> ResourceHandle::create(NetworkingContext* context, const 
 #if PLATFORM(MUI)
 RefPtr<ResourceHandle> ResourceHandle::create2(NetworkingContext* context, const ResourceRequest& request, ResourceHandleClient* client, bool defersLoading, bool shouldContentSniff, bool shouldContentEncodingSniff)
 {
-    if (auto constructor = builtinResourceHandleConstructorMap().get(request.url().protocol().toStringWithoutCopying()))
-        return constructor(request, client);
+    if (auto protocol = request.url().protocol().toExistingAtomString(); !protocol.isNull()) {
+        if (auto constructor = builtinResourceHandleConstructorMap().get(protocol))
+            return constructor(request, client);
+    }
 
-    auto newHandle = adoptRef(*new ResourceHandle(context, request, client, defersLoading, shouldContentSniff, shouldContentEncodingSniff, { }, false));
+    auto contentEncodingSniffingPolicy = shouldContentEncodingSniff ? ContentEncodingSniffingPolicy::Default : ContentEncodingSniffingPolicy::Disable;
+    auto newHandle = adoptRef(*new ResourceHandle(context, request, client, defersLoading, shouldContentSniff, contentEncodingSniffingPolicy, { }, false));
 
     if (newHandle->d->m_scheduledFailureType != NoFailure)
         return newHandle;

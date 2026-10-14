@@ -35,6 +35,7 @@
 #include <wtf/FileSystem.h>
 #include <wtf/MonotonicTime.h>
 #include <wtf/URL.h>
+#include <wtf/text/MakeString.h>
 #include <wtf/Vector.h>
 #include <wtf/WallTime.h>
 #include <wtf/text/StringConcatenateNumbers.h>
@@ -555,7 +556,7 @@ bool CookieJarDB::setCookie(const URL& firstParty, const URL& url, const String&
         return false;
 
     if (cookie->domain.isEmpty())
-        cookie->domain = "." + url.host().convertToASCIILowercase(); // Original Odyssey logic
+        cookie->domain = makeString('.', url.host().convertToASCIILowercase()); // Original Odyssey logic
 
     if (cookie->path.isEmpty())
         cookie->path = CookieUtil::defaultPathForURL(url);

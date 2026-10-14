@@ -53,7 +53,7 @@ namespace WebCore {
 #if OS(MORPHOS)
 String CurlRequest::m_downloadPath = "SYS:Downloads"_s;
 #else
-String CurlRequest::m_downloadPath = "/tmp";
+String CurlRequest::m_downloadPath = "/tmp"_s;
 #endif
 
 CurlRequest::CurlRequest(const ResourceRequest&request, CurlRequestClient* client, ShouldSuspend shouldSuspend, EnableMultipart enableMultipart, CaptureNetworkLoadMetrics captureExtraMetrics, RefPtr<SynchronousLoaderMessageQueue>&& messageQueue)
@@ -168,7 +168,7 @@ void CurlRequest::cancel()
     auto& scheduler = CurlContext::singleton().scheduler();
 
 #if PLATFORM(MUI)
-    callClient([this, protectedThis = makeRef(*this)](CurlRequest& request, CurlRequestClient& client) {
+    callClient([this, protectedThis = Ref { *this }](CurlRequest& request, CurlRequestClient& client) {
         client.curlDidCancel(request);
     });
 #endif

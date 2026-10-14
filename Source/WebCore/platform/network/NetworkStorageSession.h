@@ -176,7 +176,7 @@ public:
     WEBCORE_EXPORT void setCookieAcceptPolicy(CookieAcceptPolicy) const;
     WEBCORE_EXPORT void setProxySettings(const CurlProxySettings&);
 
-#if OS(MORPHOS)
+#if OS(MORPHOS) || PLATFORM(MUI)
     enum class CurlHTTP2Mode {
         Disabled, Enabled, EnabledExceptPost
     };
