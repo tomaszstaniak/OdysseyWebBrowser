@@ -26,6 +26,8 @@
 #pragma once
 
 #include "PlatformScreen.h"
+#include <wtf/FastMalloc.h>
+#include <wtf/Noncopyable.h>
 
 namespace WebCore {
 
