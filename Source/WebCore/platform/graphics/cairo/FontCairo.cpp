@@ -50,20 +50,6 @@
 
 namespace WebCore {
 
-#if PLATFORM(MUI)
-
-bool FontCascade::canReturnFallbackFontsForComplexText()
-{
-    return false;
-}
-
-bool FontCascade::canExpandAroundIdeographsInComplexText()
-{
-    return false;
-}
-
-#endif
-
 void FontCascade::drawGlyphs(GraphicsContext& context, const Font& font, const GlyphBufferGlyph* glyphs,
     const GlyphBufferAdvance* advances, unsigned numGlyphs, const FloatPoint& point,
     FontSmoothingMode fontSmoothingMode)

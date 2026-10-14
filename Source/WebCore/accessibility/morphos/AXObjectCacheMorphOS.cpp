@@ -97,8 +97,14 @@ void AXObjectCache::postPlatformNotification(AccessibilityObject& object, AXNoti
         break;
     }
 
+#if OS(MORPHOS)
     ChromeClient& client = document().frame()->page()->chrome().client();
     client.postAccessibilityNotification(*protectedObject, notification);
+#else
+    // No accessibility bridge on AROS yet.
+    UNUSED_PARAM(protectedObject);
+    UNUSED_PARAM(notification);
+#endif
 }
 
 void AXObjectCache::nodeTextChangePlatformNotification(AccessibilityObject* object, AXTextChange textChange, unsigned offset, const String& text)
@@ -109,8 +115,16 @@ void AXObjectCache::nodeTextChangePlatformNotification(AccessibilityObject* obje
         || object->document()->view()->layoutContext().layoutState()
         || object->document()->childNeedsStyleRecalc())
         return;
+#if OS(MORPHOS)
     ChromeClient& client = document().frame()->page()->chrome().client();
     client.postAccessibilityNodeTextChangeNotification(object, textChange, offset, text);
+#else
+    // No accessibility bridge on AROS yet.
+    UNUSED_PARAM(object);
+    UNUSED_PARAM(textChange);
+    UNUSED_PARAM(offset);
+    UNUSED_PARAM(text);
+#endif
 }
 
 void AXObjectCache::frameLoadingEventPlatformNotification(AccessibilityObject* object, AXLoadingEvent loadingEvent)
@@ -121,8 +135,14 @@ void AXObjectCache::frameLoadingEventPlatformNotification(AccessibilityObject* o
         || object->document()->view()->layoutContext().layoutState()
         || object->document()->childNeedsStyleRecalc())
         return;
+#if OS(MORPHOS)
     ChromeClient& client = document().frame()->page()->chrome().client();
     client.postAccessibilityFrameLoadingEventNotification(object, loadingEvent);
+#else
+    // No accessibility bridge on AROS yet.
+    UNUSED_PARAM(object);
+    UNUSED_PARAM(loadingEvent);
+#endif
 }
 
 void AXObjectCache::handleScrolledToAnchor(const Node* scrolledToNode)

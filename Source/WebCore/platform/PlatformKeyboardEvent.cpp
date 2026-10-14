@@ -32,6 +32,7 @@ namespace WebCore {
 
 std::optional<OptionSet<PlatformEvent::Modifier>> PlatformKeyboardEvent::s_currentModifiers;    
 
+#if !PLATFORM(MUI) // OWB reads the AROS input state (platform/mui/PlatformKeyboardEventMorphOS.cpp)
 bool PlatformKeyboardEvent::currentCapsLockState()
 {
     return currentStateOfModifierKeys().contains(PlatformEvent::Modifier::CapsLockKey);
@@ -45,6 +46,7 @@ void PlatformKeyboardEvent::getCurrentModifierState(bool& shiftKey, bool& ctrlKe
     altKey = currentModifiers.contains(PlatformEvent::Modifier::AltKey);
     metaKey = currentModifiers.contains(PlatformEvent::Modifier::MetaKey);
 }
+#endif
 
 void PlatformKeyboardEvent::setCurrentModifierState(OptionSet<Modifier> modifiers)
 {
