@@ -556,7 +556,7 @@ bool CookieJarDB::setCookie(const URL& firstParty, const URL& url, const String&
         return false;
 
     if (cookie->domain.isEmpty())
-        cookie->domain = makeString('.', url.host().convertToASCIILowercase()); // Original Odyssey logic
+        cookie->domain = url.host().convertToASCIILowercase();
 
     if (cookie->path.isEmpty())
         cookie->path = CookieUtil::defaultPathForURL(url);
