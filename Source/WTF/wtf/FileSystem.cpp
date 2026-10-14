@@ -973,7 +973,7 @@ String pathByAppendingComponents(StringView path, const Vector<StringView>& comp
 
 #endif
 
-#if !OS(WINDOWS) && !PLATFORM(COCOA) && !PLATFORM(PLAYSTATION) && !OS(MORPHOS)
+#if !OS(WINDOWS) && !PLATFORM(COCOA) && !PLATFORM(PLAYSTATION) && !OS(MORPHOS) && !PLATFORM(MUI)
 
 String createTemporaryDirectory()
 {

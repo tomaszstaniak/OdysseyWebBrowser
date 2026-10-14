@@ -7,8 +7,15 @@ struct VLayerHandle;
 struct Window;
 struct Library;
 
+// OWB (AROS): AROS has no cgxvideo.library overlays, so video is scaled with
+// swscale and painted through Cairo. MorphOS keeps Wayfarer's VLayer overlay.
+#if OS(AROS)
 #define CGX_OVERLAY 0
 #define CAIRO_BLIT  1
+#else
+#define CGX_OVERLAY 1
+#define CAIRO_BLIT  0
+#endif
 
 namespace WebCore {
 namespace Acinerella {

@@ -3,8 +3,16 @@
 #include "MediaPlayerMorphOS.h"
 #include <wtf/RefPtr.h>
 
+// OWB (AROS): libeventprofiler is MorphOS-only; on AROS the profiling macros compile to nothing.
+#if OS(MORPHOS)
 #define EP_PROFILING 0
 #include <libeventprofiler.h>
+#else
+#define EP_PROFILING 0
+#define EP_EVENT(x)
+#define EP_SCOPE(x)
+#define EP_EVENTSTR(x)
+#endif
 
 namespace WebCore {
 

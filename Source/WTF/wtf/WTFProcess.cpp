@@ -74,6 +74,9 @@ void terminateProcess(int status)
     exitProcess(status);
 #elif OS(MORPHOS)
     Wait(0);
+#elif PLATFORM(MUI)
+    // AROS posixc has no _exit(); C99 _Exit() also skips atexit handlers.
+    _Exit(status);
 #else
     _exit(status);
 #endif
