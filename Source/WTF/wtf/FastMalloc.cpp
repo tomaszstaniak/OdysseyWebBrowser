@@ -283,7 +283,7 @@ void* tryFastAlignedMalloc(size_t alignment, size_t size)
 void fastAlignedFree(void* p) 
 {
 #if OS(AROS)
-    allocator_freemem(p);
+    allocator_freemem_from(p, __builtin_return_address(0));
 #else
     free(p);
 #endif
