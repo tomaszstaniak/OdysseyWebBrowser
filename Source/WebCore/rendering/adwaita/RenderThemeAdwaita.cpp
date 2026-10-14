@@ -112,7 +112,7 @@ static inline Color getAccentColor(const RenderObject& renderObject)
     return getSystemAccentColor();
 }
 
-#if !OS(MORPHOS)
+#if !OS(MORPHOS) && !PLATFORM(MUI)
 RenderTheme& RenderTheme::singleton()
 {
     static MainThreadNeverDestroyed<RenderThemeAdwaita> theme;

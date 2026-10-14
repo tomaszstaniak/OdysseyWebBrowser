@@ -6,6 +6,11 @@
 #include "AcinerellaContainer.h"
 #include "MediaPlayerMorphOS.h"
 #include <proto/exec.h>
+#if OS(AROS)
+#include <aros/debug.h>
+#undef D
+#define dprintf bug
+#endif
 
 #define D(x) 
 #define DNF(x) // if (!isAudio()) {x;}
@@ -46,8 +51,12 @@ AcinerellaDecoder::~AcinerellaDecoder()
 	DLIFETIME(dprintf("%s: %p --\033[0m\n", __func__, this));
     if (!m_terminating)
     {
+#if OS(MORPHOS)
         dprintf("Wayfarer's media decoder shut down incorrectly, please send the following log to wayfarer@wayfarer.icu\n");
         DumpTaskState(FindTask(0));
+#else
+        dprintf("AcinerellaDecoder %p: shut down without terminate()\n", this);
+#endif
     }
 }
 

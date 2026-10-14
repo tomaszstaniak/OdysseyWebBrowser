@@ -252,7 +252,7 @@ FloatPoint Widget::convertFromContainingView(const FloatPoint& parentPoint) cons
 }
 
 // OWB: PLATFORM(MUI) implements these in platform/mui/WidgetMorphOS.cpp.
-#if !PLATFORM(COCOA) && !PLATFORM(MUI)
+#if !PLATFORM(COCOA)
 
 Widget::Widget(PlatformWidget widget)
 {
@@ -294,7 +294,7 @@ void Widget::paint(GraphicsContext&, const IntRect&, SecurityOriginPaintPolicy, 
 {
 }
 
-#endif // !PLATFORM(COCOA) && !PLATFORM(MUI)
+#endif // !PLATFORM(COCOA)
 
 #if !PLATFORM(COCOA)
 
