@@ -274,8 +274,8 @@ RefPtr<CryptoKeyEC> CryptoKeyEC::platformImportSpki(CryptoAlgorithmIdentifier id
     //     parameters  ANY DEFINED BY algorithm OPTIONAL
     // }
 
-    ptr = value->value.sequence->data;
-    auto algorithm = ASN1SequencePtr(d2i_ASN1_SEQUENCE_ANY(nullptr, &ptr, value->value.sequence->length));
+    ptr = ASN1_STRING_get0_data(value->value.sequence);
+    auto algorithm = ASN1SequencePtr(d2i_ASN1_SEQUENCE_ANY(nullptr, &ptr, ASN1_STRING_length(value->value.sequence)));
     if (!algorithm)
         return nullptr;
 
@@ -324,7 +324,7 @@ RefPtr<CryptoKeyEC> CryptoKeyEC::platformImportSpki(CryptoAlgorithmIdentifier id
     if (!point)
         return nullptr;
 
-    if (EC_POINT_oct2point(group, point.get(), bitString->data, bitString->length, 0) <= 0)
+    if (EC_POINT_oct2point(group, point.get(), ASN1_STRING_get0_data(bitString), ASN1_STRING_length(bitString), 0) <= 0)
         return nullptr;
 
     if (EC_KEY_set_public_key(key.get(), point.get()) <= 0)
@@ -358,24 +358,28 @@ RefPtr<CryptoKeyEC> CryptoKeyEC::platformImportPkcs8(CryptoAlgorithmIdentifier i
     if (!pkey || EVP_PKEY_base_id(pkey.get()) != EVP_PKEY_EC)
         return nullptr;
 
-    auto ecKey = EVP_PKEY_get0_EC_KEY(pkey.get());
+    // Since OpenSSL 3.0 get0 returns a const cached copy; take a reference,
+    // modify it and store it back so the flag reaches the EVP_PKEY.
+    auto ecKey = ECKeyPtr(EVP_PKEY_get1_EC_KEY(pkey.get()));
     if (!ecKey)
         return nullptr;
 
-    if (EC_KEY_check_key(ecKey) <= 0)
+    if (EC_KEY_check_key(ecKey.get()) <= 0)
         return nullptr;
 
-    if (!verifyCurve(EC_KEY_get0_group(ecKey), curve))
+    if (!verifyCurve(EC_KEY_get0_group(ecKey.get()), curve))
         return nullptr;
 
-    EC_KEY_set_asn1_flag(ecKey, OPENSSL_EC_NAMED_CURVE);
+    EC_KEY_set_asn1_flag(ecKey.get(), OPENSSL_EC_NAMED_CURVE);
+    if (EVP_PKEY_set1_EC_KEY(pkey.get(), ecKey.get()) <= 0)
+        return nullptr;
 
     return adoptRef(new CryptoKeyEC(identifier, curve, CryptoKeyType::Private, WTFMove(pkey), extractable, usages));
 }
 
 Vector<uint8_t> CryptoKeyEC::platformExportRaw(UseCryptoKit) const
 {
-    EC_KEY* key = EVP_PKEY_get0_EC_KEY(platformKey().get());
+    const EC_KEY* key = EVP_PKEY_get0_EC_KEY(platformKey().get());
     if (!key)
         return { };
     
@@ -396,7 +400,7 @@ bool CryptoKeyEC::platformAddFieldElements(JsonWebKey& jwk, UseCryptoKit) const
 {
     size_t keySizeInBytes = (keySizeInBits() + 7) / 8;
 
-    EC_KEY* key = EVP_PKEY_get0_EC_KEY(platformKey().get());
+    const EC_KEY* key = EVP_PKEY_get0_EC_KEY(platformKey().get());
     if (!key)
         return false;
 

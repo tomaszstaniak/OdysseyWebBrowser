@@ -238,16 +238,19 @@ static std::optional<Seconds> convertASN1TimeToSeconds(const ASN1_TIME* ans1Time
     if (!ans1Time)
         return std::nullopt;
 
-    if ((ans1Time->type != V_ASN1_UTCTIME && ans1Time->type != V_ASN1_GENERALIZEDTIME) || !ans1Time->data)
+    // ASN1_STRING is opaque since OpenSSL 4.0; the accessors exist since 1.1.0.
+    int type = ASN1_STRING_type(ans1Time);
+    int length = ASN1_STRING_length(ans1Time);
+    auto data = ASN1_STRING_get0_data(ans1Time);
+    if ((type != V_ASN1_UTCTIME && type != V_ASN1_GENERALIZEDTIME) || !data)
         return std::nullopt;
 
     // UTCTIME         : YYmmddHHMM[SS]
     // GENERALIZEDTIME : YYYYmmddHHMM[SS]
-    int digitLength = ans1Time->type == V_ASN1_UTCTIME ? 10 : 12;
-    if (ans1Time->length < digitLength)
+    int digitLength = type == V_ASN1_UTCTIME ? 10 : 12;
+    if (length < digitLength)
         return std::nullopt;
 
-    auto data = ans1Time->data;
     for (int i = 0; i < digitLength; i++) {
         if (!isASCIIDigit(data[i]))
             return std::nullopt;
@@ -255,7 +258,7 @@ static std::optional<Seconds> convertASN1TimeToSeconds(const ASN1_TIME* ans1Time
 
     struct tm time { };
 
-    if (ans1Time->type == V_ASN1_UTCTIME) {
+    if (type == V_ASN1_UTCTIME) {
         time.tm_year = (data[0] - '0') * 10 + (data[1] - '0');
         if (time.tm_year < 50)
             time.tm_year += 100;
@@ -264,7 +267,7 @@ static std::optional<Seconds> convertASN1TimeToSeconds(const ASN1_TIME* ans1Time
         time.tm_year -= 1900;
     }
 
-    data += ans1Time->type == V_ASN1_UTCTIME ? 2 : 4;
+    data += type == V_ASN1_UTCTIME ? 2 : 4;
 
     time.tm_mon = (data[0] - '0') * 10 + (data[1] - '0') - 1;
     if (time.tm_mon < 0 || time.tm_mon > 11)
@@ -273,7 +276,7 @@ static std::optional<Seconds> convertASN1TimeToSeconds(const ASN1_TIME* ans1Time
     time.tm_hour = (data[4] - '0') * 10 + (data[5] - '0');
     time.tm_min = (data[6] - '0') * 10 + (data[7] - '0');
 
-    if ((ans1Time->length >= digitLength + 2) && isASCIIDigit(data[8]) && isASCIIDigit(data[9]))
+    if ((length >= digitLength + 2) && isASCIIDigit(data[8]) && isASCIIDigit(data[9]))
         time.tm_sec = (data[8] - '0') * 10 + (data[9] - '0');
 
     auto gmtTime = mktime(&time);
@@ -298,12 +301,14 @@ static void getSubjectAltName(const X509* x509, Vector<String>& dnsNames, Vector
             if (!dnsName.isNull())
                 dnsNames.append(WTFMove(dnsName));
         } else if (value->type == GEN_IPADD) {
-            auto data = value->d.iPAddress->data;
-            if (value->d.iPAddress->length == 4)
+            auto data = ASN1_STRING_get0_data(value->d.iPAddress);
+            auto length = ASN1_STRING_length(value->d.iPAddress);
+            if (length == 4)
                 ipAddresses.append(makeString(data[0], '.', data[1], '.', data[2], '.', data[3]));
-            else if (value->d.iPAddress->length == 16) {
-                std::span<uint8_t, 16> dataSpan { data, 16 };
-                ipAddresses.append(canonicalizeIPv6Address(dataSpan));
+            else if (length == 16) {
+                std::array<uint8_t, 16> address;
+                std::copy_n(data, 16, address.begin());
+                ipAddresses.append(canonicalizeIPv6Address(std::span<uint8_t, 16> { address }));
             }
         }
     }
