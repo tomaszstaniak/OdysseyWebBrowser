@@ -156,6 +156,12 @@ void CurlRequestScheduler::startOrWakeUpThread()
 #endif
         workerThread();
 
+#if PLATFORM(MUI)
+        // Streams (WebSocket sockets) belong to this thread and its
+        // SocketBase: the ones still open at exit are closed here, not by the
+        // map's destructor on the main thread after the base is gone.
+        m_streamList.clear();
+#endif
         Locker locker { m_mutex };
         m_runThread = false;
 #if PLATFORM(MUI)
