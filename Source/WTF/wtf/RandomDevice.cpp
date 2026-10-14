@@ -53,6 +53,10 @@
 #include <proto/random.h>
 #endif
 
+#if OS(AROS)
+#include <openssl/rand.h>
+#endif
+
 namespace WTF {
 
 #if !OS(DARWIN) && !OS(FUCHSIA) && OS(UNIX)
@@ -128,6 +132,10 @@ void RandomDevice::cryptographicallyRandomValues(std::span<uint8_t> buffer)
         CRASH();
     CryptReleaseContext(hCryptProv, 0);
 #elif OS(AROS)
+    // No urandom device on AROS. OpenSSL's DRBG is the cryptographic source:
+    // the port's OpenSSL seeds it from jitterentropy (recipes/openssl).
+    if (RAND_bytes(buffer.data(), buffer.size()) != 1)
+        CRASH();
 #else
 #error "This configuration doesn't have a strong source of randomness."
 // WARNING: When adding new sources of OS randomness, the randomness must
