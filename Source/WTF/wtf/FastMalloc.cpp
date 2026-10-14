@@ -274,7 +274,7 @@ void* tryFastAlignedMalloc(size_t alignment, size_t size)
 {
     FAIL_IF_EXCEEDS_LIMIT(size);
 #if OS(AROS)
-    return allocator_getmem_aligned(size, alignment);
+    return allocator_getmem_aligned_try(size, alignment);
 #else
     return aligned_alloc(alignment, size);
 #endif
