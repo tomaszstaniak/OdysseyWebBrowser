@@ -36,22 +36,48 @@
 #include <proto/exec.h>
 #include <proto/bsdsocket.h>
 #include <unistd.h>
+#include <strings.h>
+#include <stdlib.h>
 #include <bsdsocket/socketbasetags.h>
 #include <aros/debug.h>
 #undef send
+// Contract with libcurl on AROS (recipe patch curl/0004): the application
+// defines and owns SocketBase. A bsdsocket.library base and its errno pointer
+// belong to the task that opened it, and OWB makes every socket call on the
+// curl thread (requests and WebSocket streams), so that thread opens the base
+// when it starts and closes it when it ends. libcurl only uses it.
 struct Library *SocketBase;
-void init_SocketBase()
+
+static bool init_SocketBase()
 {
-    SocketBase = OpenLibrary("bsdsocket.library", 4L);
+    // Test hook: OWB_SIMULATE_NO_BSDSOCKET behaves as if the stack were absent.
+    SocketBase = getenv("OWB_SIMULATE_NO_BSDSOCKET") ? nullptr : OpenLibrary("bsdsocket.library", 4L);
+    if (!SocketBase) {
+        bug("[OWB] curl thread: bsdsocket.library 4 is not available; network requests will fail\n");
+        return false;
+    }
+    // errno is per task: point this base at the curl thread's errno.
     SocketBaseTags(
         SBTM_SETVAL(SBTC_ERRNOPTR(sizeof(errno))), (IPTR) &errno,
         SBTM_SETVAL(SBTC_LOGTAGPTR),       (IPTR) "cURL",
         TAG_DONE);
+    return true;
 }
-void close_SocketBase()
+
+static void close_SocketBase()
 {
-    CloseLibrary(SocketBase);
-    SocketBase = NULL;
+    if (SocketBase)
+        CloseLibrary(SocketBase);
+    SocketBase = nullptr;
+}
+
+// Without a TCP/IP stack only file: transfers can run: a network transfer or
+// stream must not reach a socket call through a NULL base.
+static bool needsSocketBase(CURL* handle)
+{
+    char* url = nullptr;
+    curl_easy_getinfo(handle, CURLINFO_EFFECTIVE_URL, &url);
+    return !url || strncasecmp(url, "file:", 5);
 }
 #endif
 
@@ -186,6 +212,13 @@ CurlStreamID CurlRequestScheduler::createStream(const URL& url, CurlStream::Clie
     m_clientList.add(streamID, &client);
 
     callOnWorkerThread([this, streamID, url = url.isolatedCopy()]() mutable {
+        if (!SocketBase) {
+            // No TCP/IP stack: fail the stream instead of opening a socket.
+            callClientOnMainThread(streamID, [streamID](CurlStream::Client& client) {
+                client.didFail(streamID, CURLE_COULDNT_CONNECT);
+            });
+            return;
+        }
         m_streamList.add(streamID, CurlStream::create(*this, streamID, WTFMove(url)));
     });
 
@@ -372,6 +405,12 @@ void CurlRequestScheduler::startTransfer(CurlRequestSchedulerClient* client)
             completeTransfer(client, CURLE_FAILED_INIT);
             return;
         }
+#if PLATFORM(MUI)
+        if (!SocketBase && needsSocketBase(handle)) {
+            completeTransfer(client, CURLE_COULDNT_CONNECT);
+            return;
+        }
+#endif
 
         m_curlMultiHandle->addHandle(handle);
 
