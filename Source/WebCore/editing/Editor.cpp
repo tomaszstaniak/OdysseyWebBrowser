@@ -708,11 +708,9 @@ void Editor::replaceSelectionWithFragment(DocumentFragment& fragment, SelectRepl
     if (selection.isNone() || !selection.isContentEditable())
         return;
 
-#if HAVE(ACCESSIBILITY)
     AccessibilityReplacedText replacedText;
     if (AXObjectCache::accessibilityEnabled() && (editingAction == EditAction::Paste || editingAction == EditAction::Insert || editingAction == EditAction::RemoveBackground))
         replacedText = AccessibilityReplacedText(selection);
-#endif
 
     OptionSet<ReplaceSelectionCommand::CommandOption> options { ReplaceSelectionCommand::PreventNesting, ReplaceSelectionCommand::SanitizeFragment };
     if (selectReplacement == SelectReplacement::Yes)
@@ -738,7 +736,6 @@ void Editor::replaceSelectionWithFragment(DocumentFragment& fragment, SelectRepl
     if (selection.isInPasswordField())
         return;
 
-#if HAVE(ACCESSIBILITY)
     if (AXObjectCache::accessibilityEnabled() && editingAction == EditAction::Paste) {
         String text = AccessibilityObject::stringForVisiblePositionRange(command->visibleSelectionForInsertedText());
         replacedText.postTextStateChangeNotification(document->existingAXObjectCache(), AXTextEditTypePaste, text, document->selection().selection());
@@ -750,7 +747,6 @@ void Editor::replaceSelectionWithFragment(DocumentFragment& fragment, SelectRepl
         replacedText.postTextStateChangeNotification(document->existingAXObjectCache(), AXTextEditTypeInsert, text, document->selection().selection());
         command->composition()->setRangeDeletedByUnapply(replacedText.replacedRange());
     }
-#endif
 
     if (!isContinuousSpellCheckingEnabled())
         return;

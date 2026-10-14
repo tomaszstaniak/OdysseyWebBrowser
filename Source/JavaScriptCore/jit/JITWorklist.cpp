@@ -65,7 +65,7 @@ JITWorklist::~JITWorklist()
 void JITWorklist::shutdown()
 {
     {
-        LockHolder locker(*m_lock);
+        Locker locker { *m_lock };
         for (unsigned i = m_threads.size(); i--;)
             if (!m_threads[i]->tryStop(locker))
             {

@@ -5476,6 +5476,13 @@ bool LocalFrameView::handleWheelEventForScrolling(const PlatformWheelEvent& whee
     }
 #endif
 
+#if PLATFORM(MUI)
+    // OWB: scroll a view that has no scrollbars (2.34 had this in FrameView.cpp).
+    if ((wheelEvent.deltaY() || wheelEvent.deltaX()) && !verticalScrollbar() && !horizontalScrollbar()) {
+        scrollBy(IntSize(-wheelEvent.deltaX(), -wheelEvent.deltaY()));
+        return true;
+    }
+#endif
     return ScrollableArea::handleWheelEventForScrolling(wheelEvent, gestureState);
 }
 

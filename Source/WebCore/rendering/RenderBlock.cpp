@@ -383,10 +383,8 @@ RenderPtr<RenderBlock> RenderBlock::clone() const
 
 void RenderBlock::deleteLines()
 {
-#if HAVE(ACCESSIBILITY)
     if (AXObjectCache* cache = document().existingAXObjectCache())
         cache->deferRecomputeIsIgnored(element());
-#endif
 }
 
 bool RenderBlock::childrenPreventSelfCollapsing() const

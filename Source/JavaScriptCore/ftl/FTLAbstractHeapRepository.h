@@ -47,6 +47,15 @@ namespace JSC { namespace FTL {
     macro(JSCellHeaderAndNamedProperties) \
     macro(OrderedHashTableData) \
 
+// OWB: FTL without WebAssembly (OWB builds ENABLE_WEBASSEMBLY OFF, as in 2.34)
+#if ENABLE(WEBASSEMBLY)
+#define FOR_EACH_WASM_ABSTRACT_FIELD(macro) \
+    macro(JSWebAssemblyInstance_moduleRecord, JSWebAssemblyInstance::offsetOfModuleRecord()) \
+    macro(WebAssemblyModuleRecord_exportsObject, WebAssemblyModuleRecord::offsetOfExportsObject())
+#else
+#define FOR_EACH_WASM_ABSTRACT_FIELD(macro)
+#endif
+
 #define FOR_EACH_ABSTRACT_FIELD(macro) \
     macro(ArrayBuffer_data, ArrayBuffer::offsetOfData()) \
     macro(ArrayStorage_numValuesInVector, ArrayStorage::numValuesInVectorOffset()) \
@@ -135,7 +144,7 @@ namespace JSC { namespace FTL {
     macro(JSRopeString_fiber2, JSRopeString::offsetOfFiber2()) \
     macro(JSScope_next, JSScope::offsetOfNext()) \
     macro(JSSymbolTableObject_symbolTable, JSSymbolTableObject::offsetOfSymbolTable()) \
-    macro(JSWebAssemblyInstance_moduleRecord, JSWebAssemblyInstance::offsetOfModuleRecord()) \
+    FOR_EACH_WASM_ABSTRACT_FIELD(macro) \
     macro(NativeExecutable_asString, NativeExecutable::offsetOfAsString()) \
     macro(RegExpObject_regExpAndFlags, RegExpObject::offsetOfRegExpAndFlags()) \
     macro(RegExpObject_lastIndex, RegExpObject::offsetOfLastIndex()) \
@@ -182,7 +191,6 @@ namespace JSC { namespace FTL {
     macro(WeakMapImpl_buffer,  WeakMapImpl<WeakMapBucket<WeakMapBucketDataKey>>::offsetOfBuffer()) \
     macro(WeakMapBucket_value, WeakMapBucket<WeakMapBucketDataKeyValue>::offsetOfValue()) \
     macro(WeakMapBucket_key, WeakMapBucket<WeakMapBucketDataKeyValue>::offsetOfKey()) \
-    macro(WebAssemblyModuleRecord_exportsObject, WebAssemblyModuleRecord::offsetOfExportsObject()) \
     macro(Symbol_symbolImpl, Symbol::offsetOfSymbolImpl()) \
 
 #define FOR_EACH_INDEXED_ABSTRACT_HEAP(macro) \

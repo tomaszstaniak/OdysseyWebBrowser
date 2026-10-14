@@ -1252,9 +1252,11 @@ private:
         case GetPrototypeOf:
             compileGetPrototypeOf();
             break;
+#if ENABLE(WEBASSEMBLY)
         case GetWebAssemblyInstanceExports:
             compileGetWebAssemblyInstanceExports();
             break;
+#endif
         case AllocatePropertyStorage:
             compileAllocatePropertyStorage();
             break;
@@ -1463,9 +1465,11 @@ private:
         case CallDirectEval:
             compileCallDirectEval();
             break;
+#if ENABLE(WEBASSEMBLY)
         case CallWasm:
             compileCallWasm();
             break;
+#endif
         case CallCustomAccessorGetter:
             compileCallCustomAccessorGetter();
             break;
@@ -5650,12 +5654,14 @@ IGNORE_CLANG_WARNINGS_END
         setJSValue(m_out.phi(Int64, monoProto, polyProto, slowResult));
     }
 
+#if ENABLE(WEBASSEMBLY) // OWB: FTL without WebAssembly (OWB builds ENABLE_WEBASSEMBLY OFF, as in 2.34)
     void compileGetWebAssemblyInstanceExports()
     {
         LValue base = lowCell(m_node->child1());
         LValue moduleRecord = m_out.loadPtr(base, m_heaps.JSWebAssemblyInstance_moduleRecord);
         setJSValue(m_out.loadPtr(moduleRecord, m_heaps.WebAssemblyModuleRecord_exportsObject));
     }
+#endif
 
     LValue typedArrayLength(LValue base, bool acceptResizable, std::optional<TypedArrayType> typedArrayType, Edge edge = Edge())
     {
@@ -12467,6 +12473,7 @@ IGNORE_CLANG_WARNINGS_END
         setJSValue(patchpoint);
     }
 
+#if ENABLE(WEBASSEMBLY) // OWB: FTL without WebAssembly (OWB builds ENABLE_WEBASSEMBLY OFF, as in 2.34)
     void compileCallWasm()
     {
         Node* node = m_node;
@@ -12694,6 +12701,7 @@ IGNORE_CLANG_WARNINGS_END
             }
         }
     }
+#endif
 
     void compileCallCustomAccessorGetter()
     {

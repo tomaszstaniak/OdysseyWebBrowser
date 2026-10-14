@@ -295,6 +295,12 @@ public:
     virtual std::optional<double> dataDetectionReferenceDate() { return std::nullopt; }
 #endif
 
+#if USE(CURL_OPENSSL)
+    // OWB: TLS details of a response for WebKitLegacy/mui (moved here from
+    // FrameLoaderClient.h, which 2.46 reduced to a small base class).
+    virtual void didReceiveSSLSecurityExtension(const ResourceRequest&, const char*) = 0;
+#endif
+
     virtual bool shouldLoadMediaElementURL(const URL&) const { return true; }
 
     virtual void didChangeScrollOffset() { }

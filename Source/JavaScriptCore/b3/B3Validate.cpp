@@ -468,7 +468,9 @@ public:
             case VectorExtractLane:
                 VALIDATE(!value->kind().hasExtraBits(), ("At ", *value));
                 VALIDATE(value->numChildren() == 1, ("At ", *value));
+#if ENABLE(WEBASSEMBLY)
                 VALIDATE(value->type() == Wasm::toB3Type(Wasm::simdScalarType(value->asSIMDValue()->simdLane())), ("At ", *value));
+#endif
                 VALIDATE(value->child(0)->type() == V128, ("At ", *value));
                 break;
             case VectorReplaceLane:
@@ -476,7 +478,9 @@ public:
                 VALIDATE(value->numChildren() == 2, ("At ", *value));
                 VALIDATE(value->type() == V128, ("At ", *value));
                 VALIDATE(value->child(0)->type() == V128, ("At ", *value));
+#if ENABLE(WEBASSEMBLY)
                 VALIDATE(value->child(1)->type() == Wasm::toB3Type(Wasm::simdScalarType(value->asSIMDValue()->simdLane())), ("At ", *value));
+#endif
                 break;
             case VectorDupElement:
                 VALIDATE(!value->kind().hasExtraBits(), ("At ", *value));
@@ -498,7 +502,9 @@ public:
                 VALIDATE(!value->kind().hasExtraBits(), ("At ", *value));
                 VALIDATE(value->numChildren() == 1, ("At ", *value));
                 VALIDATE(value->type() == V128, ("At ", *value));
+#if ENABLE(WEBASSEMBLY)
                 VALIDATE(value->child(0)->type() == Wasm::toB3Type(Wasm::simdScalarType(value->asSIMDValue()->simdLane())), ("At ", *value));
+#endif
                 break;
 
             case VectorPopcnt:
