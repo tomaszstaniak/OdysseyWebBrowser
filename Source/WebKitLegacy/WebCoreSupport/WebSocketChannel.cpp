@@ -33,7 +33,7 @@
 #include "WebSocketChannel.h"
 
 #include "SocketStreamHandle.h"
-#if OS(MORPHOS)
+#if OS(MORPHOS) || PLATFORM(MUI)
 #include <WebCore/SocketStreamHandleImpl.h>
 #else
 #include "SocketStreamHandleImpl.h"

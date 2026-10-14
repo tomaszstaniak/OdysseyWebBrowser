@@ -113,7 +113,7 @@ public:
 
     WTF_EXPORT_PRIVATE void threadWillExit();
 
-#if OS(MORPHOS)
+#if OS(MORPHOS) || PLATFORM(MUI)
     void iterate();
 #endif
 
