@@ -33,6 +33,11 @@
 #if OS(UNIX)
 #include <arpa/inet.h>
 #endif
+#if OS(AROS)
+// AROS declares ntohs()/htons()/ntohl()/htonl() only in <netinet/in.h>,
+// unlike POSIX, which also requires them from <arpa/inet.h>.
+#include <netinet/in.h>
+#endif
 
 namespace WTF {
 
