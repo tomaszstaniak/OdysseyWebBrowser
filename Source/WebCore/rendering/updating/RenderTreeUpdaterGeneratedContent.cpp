@@ -333,7 +333,7 @@ void RenderTreeUpdater::GeneratedContent::updateWritingSuggestionsRenderer(Rende
 
     auto textWithoutSuggestion = nodeBeforeWritingSuggestionsTextRenderer->text();
 
-    auto [prefix, suffix] = [&] -> std::pair<String, String> {
+    auto [prefix, suffix] = [&]() -> std::pair<String, String> {
         if (!writingSuggestionData->supportsSuffix())
             return { textWithoutSuggestion, emptyString() };
 

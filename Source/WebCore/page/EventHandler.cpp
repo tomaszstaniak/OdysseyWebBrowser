@@ -2270,7 +2270,7 @@ bool EventHandler::swallowAnyClickEvent(const PlatformMouseEvent& platformMouseE
     if (!m_clickCount)
         return false;
 
-    auto nodeToClick = [&] -> RefPtr<Node> {
+    auto nodeToClick = [&]() -> RefPtr<Node> {
         if (ignoreAncestorNodesForClickEvent == IgnoreAncestorNodesForClickEvent::Yes) {
             if (mouseEvent.targetNode() != m_clickNode)
                 return nullptr;
