@@ -164,6 +164,12 @@ void WEBPImageDecoder::decodeFrame(size_t frameIndex, WebPDemuxer* demuxer)
     if (!webpFrameAtIndex(demuxer, frameIndex, &webpFrame))
         return;
 
+    // With partial data a VP8X frame whose ALPH chunk has arrived but not its VP8 header
+    // reports width and height 0. initFrameBuffer() would keep that empty frame rect for
+    // good and the finished frame would be blank. Wait for the dimensions.
+    if (!webpFrame.width || !webpFrame.height)
+        return;
+
     const uint8_t* dataBytes = reinterpret_cast<const uint8_t*>(webpFrame.fragment.bytes);
     size_t dataSize = webpFrame.fragment.size;
     bool blend = webpFrame.blend_method == WEBP_MUX_BLEND ? true : false;
