@@ -91,6 +91,9 @@ private:
     void deleteAllDatabaseFiles();
 
     void verifySchemaVersion();
+#if PLATFORM(MUI)
+    void verifyCookieDomainFormat(bool existedBefore);
+#endif
     void deleteAllTables();
 
     void createPrepareStatement(ASCIILiteral);

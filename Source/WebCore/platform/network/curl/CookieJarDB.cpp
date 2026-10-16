@@ -90,6 +90,15 @@ namespace WebCore {
 // - Add upgrade logic in verifySchemaVersion to migrate databases from the previous schema version
 static constexpr int schemaVersion = 1;
 
+#if PLATFORM(MUI)
+// Older builds of this port stored a cookie without a Domain attribute as
+// ".host", the same form as "Domain=.host", so host-only and domain cookies
+// cannot be told apart. Such a database is emptied once (the user is logged
+// out of every site once) and marked in PRAGMA application_id, which the
+// schema versioning above does not use.
+static constexpr int cookieDomainFormat = 1;
+#endif
+
 
 CookieJarDB::CookieJarDB(const String& databasePath)
     : m_databasePath(databasePath)
@@ -150,6 +159,9 @@ bool CookieJarDB::openDatabase()
         LOG_ERROR("Unable to turn on incremental auto-vacuum (%d %s)", m_database.lastError(), m_database.lastErrorMsg());
 
     verifySchemaVersion();
+#if PLATFORM(MUI)
+    verifyCookieDomainFormat(existsDatabaseFile);
+#endif
 
     if (!existsDatabaseFile || !m_database.tableExists("Cookie"_s)) {
         bool ok = executeSQLStatement(m_database.prepareStatement(CREATE_COOKIE_TABLE_SQL))
@@ -213,6 +225,27 @@ void CookieJarDB::verifySchemaVersion()
     // Update version
     executeSQLStatement(m_database.prepareStatementSlow(makeString("PRAGMA user_version="_s, schemaVersion)));
 }
+
+#if PLATFORM(MUI)
+void CookieJarDB::verifyCookieDomainFormat(bool existedBefore)
+{
+    if (isOnMemory())
+        return;
+
+    auto statement = m_database.prepareStatement("PRAGMA application_id"_s);
+    int format = statement ? statement->columnInt(0) : 0;
+    if (format == cookieDomainFormat)
+        return;
+
+    if (existedBefore) {
+        // Older than the bare-host format (or unknown): the stored domains are
+        // ambiguous, so every cookie goes.
+        LOG_ERROR("Cookie database with domain format %d: removing all cookies once (host-only cookies were stored as domain cookies)", format);
+        executeSQLStatement(m_database.prepareStatement(DELETE_ALL_COOKIE_SQL));
+    }
+    executeSQLStatement(m_database.prepareStatementSlow(makeString("PRAGMA application_id="_s, cookieDomainFormat)));
+}
+#endif
 
 void CookieJarDB::deleteAllTables()
 {
