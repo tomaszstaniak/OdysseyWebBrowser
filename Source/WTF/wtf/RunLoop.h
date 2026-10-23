@@ -84,6 +84,13 @@ public:
     WTF_EXPORT_PRIVATE static RunLoop& current();
     static Ref<RunLoop> protectedCurrent() { return current(); }
     WTF_EXPORT_PRIVATE static RunLoop& main();
+#if PLATFORM(MUI)
+    // Stops every run loop except the main one and waits a bounded time for
+    // their threads to exit. Called once at application exit, after JSC is
+    // shut down: the AROS pthread library joins every remaining thread at
+    // process exit, so a leftover WorkQueue thread would block the exit.
+    WTF_EXPORT_PRIVATE static void stopAllForProcessExit();
+#endif
     static Ref<RunLoop> protectedMain() { return main(); }
 #if USE(WEB_THREAD)
     WTF_EXPORT_PRIVATE static RunLoop& web();
@@ -281,6 +288,9 @@ private:
     RedBlackTree<TimerBase::ScheduledTask, MonotonicTime> m_schedules;
     Vector<Status*> m_mainLoops;
     bool m_shutdown { false };
+#if PLATFORM(MUI)
+    RefPtr<Thread> m_runningThread; // set when run() starts on this loop's thread
+#endif
     bool m_pendingTasks { false };
 #endif
 

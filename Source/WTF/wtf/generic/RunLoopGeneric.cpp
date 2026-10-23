@@ -27,6 +27,13 @@
 #include "config.h"
 #include <wtf/RunLoop.h>
 
+#if PLATFORM(MUI)
+#include <wtf/HashSet.h>
+#include <wtf/NeverDestroyed.h>
+#include <wtf/Threading.h>
+#include <mutex>
+#endif
+
 #include <wtf/DataLog.h>
 #include <wtf/NeverDestroyed.h>
 #include <wtf/ProcessID.h>
@@ -120,12 +127,80 @@ private:
     bool m_isScheduled { };
 };
 
+#if PLATFORM(MUI)
+// Every RunLoop of the process, for stopAllForProcessExit(). The registry
+// lock is always taken before a loop's own lock.
+static Lock s_allRunLoopsLock;
+
+static HashSet<RunLoop*>& allRunLoops() WTF_REQUIRES_LOCK(s_allRunLoopsLock)
+{
+    static LazyNeverDestroyed<HashSet<RunLoop*>> loops;
+    static std::once_flag onceKey;
+    std::call_once(onceKey, [] { loops.construct(); });
+    return loops;
+}
+
+void RunLoop::stopAllForProcessExit()
+{
+    // Runs at process exit, possibly with the heap exhausted: must not
+    // allocate. Each pass stops every loop but the main one (idempotent, so
+    // loops registered later are stopped too) and checks whether its thread
+    // is still in Thread::allThreads(). The loop's RefPtr keeps the Thread
+    // object, and so its address, valid. Lock order: registry, then one loop
+    // lock or the thread list lock, never both at once.
+    Thread& current = Thread::current();
+    for (int pass = 0; ; ++pass) {
+        bool allExited = true;
+        {
+            Locker locker { s_allRunLoopsLock };
+            for (auto* loop : allRunLoops()) {
+                if (loop == &RunLoop::main())
+                    continue;
+                Thread* thread;
+                {
+                    Locker loopLocker { loop->m_loopLock };
+                    if (!loop->m_shutdown) {
+                        loop->m_shutdown = true;
+                        loop->m_readyToRun.notifyAll();
+                    }
+                    thread = loop->m_runningThread.get();
+                }
+                if (!thread || thread == &current)
+                    continue;
+                Locker threadsLocker { Thread::allThreadsLock() };
+                if (Thread::allThreads().contains(thread)) {
+                    allExited = false;
+                    break;
+                }
+            }
+        }
+        // The threads leave RunLoop::run() on their own once their current
+        // task returns; tasks still queued on a stopped loop are not run and
+        // nothing is joined or killed. Wait at most five seconds (100 steps
+        // of 50 ms) for them; this bounds only this wait, not the exit.
+        if (allExited || pass == 100)
+            return;
+        sleep(50_ms);
+    }
+}
+#endif
+
 RunLoop::RunLoop()
 {
+#if PLATFORM(MUI)
+    Locker locker { s_allRunLoopsLock };
+    allRunLoops().add(this);
+#endif
 }
 
 RunLoop::~RunLoop()
 {
+#if PLATFORM(MUI)
+    {
+        Locker locker { s_allRunLoopsLock };
+        allRunLoops().remove(this);
+    }
+#endif
     Locker locker { m_loopLock };
     m_shutdown = true;
     m_readyToRun.notifyOne();
@@ -175,6 +250,13 @@ inline bool RunLoop::populateTasks(RunMode runMode, Status& statusOfThisLoop, De
 void RunLoop::runImpl(RunMode runMode)
 {
     ASSERT(this == &RunLoop::current());
+#if PLATFORM(MUI)
+    {
+        Locker locker { m_loopLock };
+        if (!m_runningThread)
+            m_runningThread = &Thread::current();
+    }
+#endif
 
     if constexpr (report) {
         static LazyNeverDestroyed<Timer> reporter;
