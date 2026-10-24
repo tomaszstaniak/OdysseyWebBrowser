@@ -1381,7 +1381,8 @@ void MediaSourceBufferPrivateMorphOS::onDecoderUpdatedPosition(RefPtr<Acinerella
 	{
 		RefPtr<MediaSourceBufferPrivateMorphOS> me = Ref{*this};
 		if ((1ULL << decoder->index()) & m_audioDecoderMask)
-			m_mediaSource->onAudioSourceBufferUpdatedPosition(me, position);
+			m_mediaSource->onAudioSourceBufferUpdatedPosition(me, position,
+				static_cast<Acinerella::AcinerellaAudioDecoder *>(decoder.get())->announcedPositionTime());
 		else if (0 == m_audioDecoderMask)
 			m_mediaSource->onVideoSourceBufferUpdatedPosition(me, position);
 	}
@@ -1435,12 +1436,12 @@ void MediaSourceBufferPrivateMorphOS::setOverlayWindowCoords(struct ::Window *w,
 	}
 }
 
-void MediaSourceBufferPrivateMorphOS::setAudioPresentationTime(double apts)
+void MediaSourceBufferPrivateMorphOS::setAudioPresentationTime(double apts, MonotonicTime reachedAt)
 {
 	if (!!m_paintingDecoder)
 	{
 		Acinerella::AcinerellaVideoDecoder *decoder = static_cast<Acinerella::AcinerellaVideoDecoder *>(m_paintingDecoder.get());
-		decoder->setAudioPresentationTime(apts);
+		decoder->setAudioPresentationTime(apts, reachedAt);
 	}
 }
 

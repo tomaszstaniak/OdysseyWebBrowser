@@ -129,7 +129,7 @@ public:
 	void paint(GraphicsContext&, const FloatRect&);
 	void setOverlayWindowCoords(struct ::Window *w, int scrollx, int scrolly, int mleft, int mtop, int mright, int mbottom, int width, int height);
 
-	void setAudioPresentationTime(double apts);
+	void setAudioPresentationTime(double apts, MonotonicTime reachedAt = MonotonicTime());
 	bool areDecodersReadyToPlay();
 	bool areDecodersPlaying();
 	float decodersBufferedTime();

@@ -48,7 +48,9 @@ public:
 	void onSourceBufferFrameUpdate(RefPtr<MediaSourceBufferPrivateMorphOS>&);
 	void onSourceBufferDidChangeActiveState(RefPtr<MediaSourceBufferPrivateMorphOS>&, bool active);
 	void onSourceBuffersReadyToPlay();
-	void onAudioSourceBufferUpdatedPosition(RefPtr<MediaSourceBufferPrivateMorphOS>&, double);
+	// reachedAt: monotonic time at which audio playback reached the position
+	// (from the AHI thread); zero means now.
+	void onAudioSourceBufferUpdatedPosition(RefPtr<MediaSourceBufferPrivateMorphOS>&, double, MonotonicTime reachedAt = MonotonicTime());
 	void onVideoSourceBufferUpdatedPosition(RefPtr<MediaSourceBufferPrivateMorphOS>&, double);
 	void onSourceBufferEnded(RefPtr<MediaSourceBufferPrivateMorphOS>&);
 	void onSourceBufferLoadingProgressed();

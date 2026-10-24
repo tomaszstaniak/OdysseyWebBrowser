@@ -489,13 +489,13 @@ void MediaSourcePrivateMorphOS::onSourceBufferFrameUpdate(RefPtr<MediaSourceBuff
 }
 
 
-void MediaSourcePrivateMorphOS::onAudioSourceBufferUpdatedPosition(RefPtr<MediaSourceBufferPrivateMorphOS>&, double position)
+void MediaSourcePrivateMorphOS::onAudioSourceBufferUpdatedPosition(RefPtr<MediaSourceBufferPrivateMorphOS>&, double position, MonotonicTime reachedAt)
 {
 	if (m_orphaned)
 		return;
 
 	if (m_paintingBuffer)
-		m_paintingBuffer->setAudioPresentationTime(position);
+		m_paintingBuffer->setAudioPresentationTime(position, reachedAt);
 
 	m_position = position;
 
