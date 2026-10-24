@@ -256,13 +256,13 @@ void AcinerellaVideoDecoder::dumpStatus()
 		isWarmedUp(), isReadyToPlay(), isPlaying(), float(bufferSize()), float(position()), m_didShowFirstFrame, m_decodedFrames.size(), m_isLive, m_decoderEOF);
 }
 
-void AcinerellaVideoDecoder::setAudioPresentationTime(double apts)
+void AcinerellaVideoDecoder::setAudioPresentationTime(double apts, MonotonicTime reachedAt)
 {
 	DSYNC(dprintf("\033[35m[VD]%s: %p -> %f\033[0m\n", __func__, this, float(apts)));
 
 	{
 		auto lock = Locker(m_audioLock);
-		m_audioPositionRealTime = MonotonicTime::now();
+		m_audioPositionRealTime = reachedAt ? reachedAt : MonotonicTime::now();
 		m_audioPosition = apts;
 		m_hasAudioPosition = true;
 	}

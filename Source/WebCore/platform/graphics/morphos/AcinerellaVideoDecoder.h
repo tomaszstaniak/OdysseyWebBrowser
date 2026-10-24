@@ -54,7 +54,9 @@ public:
 	int frameWidth() const { return m_frameWidth; }
 	int frameHeight() const { return m_frameHeight; }
 	
-	void setAudioPresentationTime(double apts);
+	// reachedAt: monotonic time at which audio playback reached apts; zero
+	// means now.
+	void setAudioPresentationTime(double apts, MonotonicTime reachedAt = MonotonicTime());
 	void setCanDropKeyFrames(bool canDropKeyFrames) { m_canDropKeyFrames = canDropKeyFrames; }
 
 	void dumpStatus() override;

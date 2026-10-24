@@ -1064,7 +1064,8 @@ void Acinerella::onDecoderUpdatedPosition(RefPtr<AcinerellaDecoder> decoder, dou
 		return;
 
 	if (decoder->isAudio() && !!m_videoDecoder)
-		static_cast<AcinerellaVideoDecoder *>(m_videoDecoder.get())->setAudioPresentationTime(pos);
+		static_cast<AcinerellaVideoDecoder *>(m_videoDecoder.get())->setAudioPresentationTime(pos,
+			static_cast<AcinerellaAudioDecoder *>(decoder.get())->announcedPositionTime());
 	
 	if (decoder->isAudio() || !m_audioDecoder)
 	{

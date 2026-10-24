@@ -484,6 +484,7 @@ bool AcinerellaAudioDecoder::fillBuffer(RefPtr<AcinerellaAudioRequest>& request,
             size_t bytesCopied = request->push(frame->pBuffer + m_ahiFrameOffset, frame->buffer_size - m_ahiFrameOffset);
             m_ahiFrameOffset += bytesCopied;
             request->setTimeToAnnounce(frame->timecode);
+            request->setEndTime(frame->timecode + double(m_ahiFrameOffset) / double(m_audioRate * m_audioChannels * 2));
 
             if (frame->buffer_size == int(m_ahiFrameOffset))
             {
@@ -593,11 +594,15 @@ void AcinerellaAudioDecoder::ahiThreadEntryPoint()
                     if (requestComplete->timeToAnnounce() > nextPositionToAnnounce)
                     {
                         nextPositionToAnnounce = requestComplete->timeToAnnounce() + 0.2;
-                        dispatch([this, positionToAnnounce(requestComplete->timeToAnnounce()), protectedThis(Ref{*this})]() {
+                        // Take the clock reading here, when the request has
+                        // completed, not when the decoder thread runs the task.
+                        dispatch([this, positionToAnnounce(requestComplete->endTime()), reachedAt(MonotonicTime::now()), protectedThis(Ref{*this})]() {
                             if (!m_ahiThreadShuttingDown)
                             {
                                 m_position = positionToAnnounce;
+                                m_announcedPositionAt = reachedAt;
                                 onPositionChanged();
+                                m_announcedPositionAt = MonotonicTime();
                             }
                         });
                     }

@@ -33,6 +33,11 @@ public:
     
     double timeToAnnounce() const { return m_timeToAnnounce; }
     void setTimeToAnnounce(double tta) { m_timeToAnnounce = tta; }
+
+    // Media time at the end of the data in this request: when the request
+    // completes, playback has reached this point.
+    double endTime() const { return m_endTime; }
+    void setEndTime(double endTime) { m_endTime = endTime; }
     
     bool isEOF() const { return m_isEOF; }
     void setIsEOF(bool iseof) { m_isEOF = iseof; }
@@ -61,6 +66,7 @@ private:
     uint8_t  m_buffer[sAudioBufferSize];
     size_t   m_continuation = sizeof(m_buffer);
     double   m_timeToAnnounce;
+    double   m_endTime = 0.0;
     bool     m_pending = false;
     bool     m_paused = false;
     bool     m_isEOF = false;
@@ -78,6 +84,11 @@ public:
 	int rate() const { return m_audioRate; }
 	int channels() const { return m_audioChannels; }
 	int bits() const { return m_audioBits; }
+
+	// Monotonic time at which the position passed to the client was
+	// reached. Set only while onPositionChanged() reports a position taken
+	// from a completed AHI request, otherwise zero.
+	MonotonicTime announcedPositionTime() const { return m_announcedPositionAt; }
 	
 	bool isAudio() const override { return true; }
 	bool isVideo() const override { return false; }
@@ -136,6 +147,7 @@ protected:
 	double          m_liveTimeCode = 0.0;
     double          m_volume = 1.0;
 	bool            m_didUnderrun = false;
+	MonotonicTime   m_announcedPositionAt;
 	int             m_audioRate;
 	int             m_audioChannels;
 	int             m_audioBits;
