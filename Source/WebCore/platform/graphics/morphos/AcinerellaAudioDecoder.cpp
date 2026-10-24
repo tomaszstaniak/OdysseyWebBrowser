@@ -505,10 +505,21 @@ bool AcinerellaAudioDecoder::fillBuffer(RefPtr<AcinerellaAudioRequest>& request,
         }
     }
 
+    // The decoder reaches EOF while about readAheadTime() of decoded audio is
+    // still queued. Only the request that takes the last queued frame ends
+    // the stream; marking an earlier one cut the end of every clip.
     if (!request->isEmpty() && m_decoderEOF)
     {
-        success = true;
-        request->setIsEOF(true);
+        bool drained;
+        {
+            auto lock = Locker(m_lock);
+            drained = m_decodedFrames.isEmpty();
+        }
+        if (drained)
+        {
+            success = true;
+            request->setIsEOF(true);
+        }
     }
     
     if (!request->isFull() && !success)
