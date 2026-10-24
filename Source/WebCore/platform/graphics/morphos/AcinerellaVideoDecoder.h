@@ -111,6 +111,7 @@ protected:
 	
 	bool            m_fakeDecode = false;
 	bool            m_canDropKeyFrames = false;
+	MonotonicTime   m_lastCatchUpByDecoding;
 	bool            m_didShowFirstFrame = false;
 	bool            m_frameSizeTransition = false;
     bool            m_ismjpeg = false;

@@ -916,7 +916,21 @@ resync:
 						}
 					}
 						
-					dropUntilPTS(audioAt + 0.5);
+					// Catch up by decoding and discarding the late frames: the
+					// key frame skip of dropUntilPTS() jumps to the next key
+					// frame, seconds ahead with streaming video, and the
+					// picture then waits for the audio. Skip when a catch up
+					// is still running or started less than 5 s ago: the
+					// decoder is not fast enough at the moment, and repeated
+					// catch ups would leave the queue empty.
+					auto now = MonotonicTime::now();
+					if (!isDiscarding() && (!m_lastCatchUpByDecoding || now - m_lastCatchUpByDecoding > 5_s))
+					{
+						m_lastCatchUpByDecoding = now;
+						discardUntilPTS(audioAt + 0.5);
+					}
+					else
+						dropUntilPTS(audioAt + 0.5);
 				}
 				else if (sleepFor.value() < -m_frameDuration)
 				{

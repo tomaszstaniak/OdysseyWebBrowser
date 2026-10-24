@@ -154,6 +154,10 @@ protected:
 	bool decodeNextFrame();
 	void decodeUntilBufferFull();
 	void dropUntilPTS(double pts);
+	// Keep decoding every package but do not queue frames that start before
+	// pts; ends with the first frame at or after pts, or a flush.
+	void discardUntilPTS(double pts);
+	bool isDiscarding();
 	void onPositionChanged();
 	void onDurationChanged();
 	void onReadyToPlay();
@@ -210,6 +214,7 @@ protected:
 	bool                               m_droppingFrames = false;
 	bool                               m_droppingUntilKeyFrame = false;
 	bool                               m_needsKF = false;
+	double                             m_discardBeforePTS = -1.0;
 	double                             m_dropToPTS;
 };
 

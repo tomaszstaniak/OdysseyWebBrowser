@@ -260,6 +260,12 @@ bool AcinerellaDecoder::decodeNextFrame()
 					}
 #endif
 					auto lock = Locker(m_lock);
+					if (m_discardBeforePTS >= 0.0)
+					{
+						if (frame.frame()->timecode < m_discardBeforePTS)
+							continue; // decoded only to reach the target
+						m_discardBeforePTS = -1.0;
+					}
 					onFrameDecoded(frame);
 					DNF(dprintf("[%s]%s: decoded frame @ %f\033[0m\n", isAudio() ? "\033[33mA":"\033[35mV", __func__, float(frame.frame()->timecode)));
 					m_decodedFrames.append(WTFMove(frame));
@@ -324,6 +330,18 @@ void AcinerellaDecoder::dropUntilPTS(double pts)
 	m_droppingUntilKeyFrame = false;
 }
 
+void AcinerellaDecoder::discardUntilPTS(double pts)
+{
+	auto lock = Locker(m_lock);
+	m_discardBeforePTS = pts;
+}
+
+bool AcinerellaDecoder::isDiscarding()
+{
+	auto lock = Locker(m_lock);
+	return m_discardBeforePTS >= 0.0;
+}
+
 void AcinerellaDecoder::flush(bool willSeek)
 {
 	D(dprintf("[%s]%s: islive %d\033[0m\n", isAudio() ? "\033[33mA":"\033[35mV", __func__, this, m_isLive));
@@ -334,6 +352,7 @@ void AcinerellaDecoder::flush(bool willSeek)
 	m_decoderEOF = false;
     m_droppingFrames = false;
     m_droppingUntilKeyFrame = false;
+    m_discardBeforePTS = -1.0;
 }
 
 void AcinerellaDecoder::onPositionChanged()
