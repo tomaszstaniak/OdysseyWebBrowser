@@ -918,8 +918,12 @@ resync:
 						
 					dropUntilPTS(audioAt + 0.5);
 				}
-				else if (sleepFor.value() < -(m_frameDuration * 0.1))
+				else if (sleepFor.value() < -m_frameDuration)
 				{
+					// Drop only a frame that is late by more than a frame
+					// period. A frame a few ms late is still shown at once:
+					// dropping it leaves a gap of two frame periods, which is
+					// more visible than the delay.
 					dropFrame = true;
 				}
 			}
