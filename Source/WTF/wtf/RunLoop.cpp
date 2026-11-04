@@ -26,12 +26,25 @@
 #include "config.h"
 #include <wtf/RunLoop.h>
 
+#if defined(__AROS__)
+#include <proto/timer.h>
+#endif
+
 #include <wtf/NeverDestroyed.h>
 #include <wtf/Ref.h>
 #include <wtf/StdLibExtras.h>
 #include <wtf/threads/BinarySemaphore.h>
 
 namespace WTF {
+
+#if defined(__AROS__)
+// Expand the timer.device macro outside RunLoop, whose nested TimerBase class
+// otherwise hides the global timer.device base used by the AROS SDK.
+static ULONG readWorkEClock(EClockVal* value)
+{
+    return ::TimerBase ? ReadEClock(value) : 0;
+}
+#endif
 
 static RunLoop* s_mainRunLoop;
 #if USE(WEB_THREAD)
@@ -126,6 +139,18 @@ bool RunLoop::isCurrent() const
 void RunLoop::performWork()
 {
     bool didSuspendFunctions = false;
+#if defined(__AROS__)
+    // MUI input is handled on this thread. After about 16 ms of callbacks the
+    // rest of the batch is left, in order, for the next iteration via the
+    // suspension path. A single long callback is not interrupted.
+    bool budgetMainWork = this == s_mainRunLoop;
+    EClockVal workStart { };
+    auto workFrequency = budgetMainWork ? readWorkEClock(&workStart) : 0;
+    auto workTicks = [](const EClockVal& clock) {
+        return (static_cast<unsigned long long>(clock.ev_hi) << 32) | clock.ev_lo;
+    };
+    auto workBudgetTicks = (static_cast<unsigned long long>(workFrequency) * 16 + 999) / 1000;
+#endif
 
     {
         Locker locker { m_nextIterationLock };
@@ -145,6 +170,15 @@ void RunLoop::performWork()
 
         auto function = m_currentIteration.takeFirst();
         function();
+#if defined(__AROS__)
+        if (workFrequency && !m_currentIteration.isEmpty()) {
+            EClockVal workNow;
+            if (readWorkEClock(&workNow) == workFrequency && workTicks(workNow) - workTicks(workStart) >= workBudgetTicks) {
+                didSuspendFunctions = true;
+                break;
+            }
+        }
+#endif
     }
 
     // Suspend only for a single cycle.
