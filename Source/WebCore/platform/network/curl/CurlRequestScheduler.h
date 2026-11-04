@@ -30,6 +30,7 @@
 #include "CurlContext.h"
 #include <wtf/HashMap.h>
 #include <wtf/Lock.h>
+#include <wtf/Condition.h>
 #include <wtf/Noncopyable.h>
 #include <wtf/Threading.h>
 
@@ -90,6 +91,8 @@ private:
     bool m_runThread { false };
 #if PLATFORM(MUI)
 	bool m_stopped { false };
+    // Wakes the worker from its socketless wait when a task is queued (the MUI loop has no curl_multi_poll).
+    Condition m_taskCondition;
 #endif
     Vector<Function<void()>> m_taskQueue;
     HashSet<CurlRequestSchedulerClient*> m_activeJobs;

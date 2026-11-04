@@ -178,6 +178,8 @@ void CurlRequestScheduler::wakeUpThreadIfPossible()
         return;
 
     m_curlMultiHandle->wakeUp();
+#else
+    m_taskCondition.notifyOne();
 #endif
 }
 
@@ -306,6 +308,9 @@ void CurlRequestScheduler::workerThread()
         m_curlMultiHandle->setMaxHostConnections(m_maxHostConnections);
     }
 
+#if PLATFORM(MUI)
+    bool lastWaitWasZero = false;
+#endif
     while (true) {
         {
             Locker locker { m_mutex };
@@ -366,7 +371,25 @@ void CurlRequestScheduler::workerThread()
             if (maxfd >= 0)
                 rc = WaitSelect(maxfd + 1, &fdread, &fdwrite, &fdexcep, &timeout, nullptr);
             else {
-                usleep(100 * 1000);
+                // No socket to wait on: idle, a new handle not connected yet, or transfers
+                // paused for the main thread. Wait until curl's next timeout, at most 100 ms;
+                // m_taskCondition ends the wait early when a task is queued.
+                long curlTimeout = -1;
+                m_curlMultiHandle->getTimeout(curlTimeout);
+                Seconds wait = 100_ms;
+                if (curlTimeout >= 0 && curlTimeout < 100)
+                    wait = Seconds::fromMilliseconds(curlTimeout);
+                // A zero timeout (a new handle) is honoured once in a row. If curl keeps
+                // asking for 0 without a socket, wait 1 ms so this priority 1 thread
+                // cannot starve the UI task.
+                if (wait <= 0_s && lastWaitWasZero)
+                    wait = 1_ms;
+                lastWaitWasZero = wait <= 0_s;
+                if (wait > 0_s) {
+                    Locker locker { m_mutex };
+                    if (m_taskQueue.isEmpty() && m_runThread)
+                        m_taskCondition.waitFor(m_mutex, wait);
+                }
             }
         } while (rc == -1 && errno == EINTR);
 
@@ -427,6 +450,9 @@ void CurlRequestScheduler::startTransfer(CurlRequestSchedulerClient* client)
     Locker locker { m_mutex };
     m_activeJobs.add(client);
     m_taskQueue.append(WTFMove(task));
+#if PLATFORM(MUI)
+    m_taskCondition.notifyOne();
+#endif
 }
 
 void CurlRequestScheduler::completeTransfer(CurlRequestSchedulerClient* client, CURLcode result)
@@ -467,6 +493,9 @@ void CurlRequestScheduler::finalizeTransfer(CurlRequestSchedulerClient* client, 
     };
 
     m_taskQueue.append(WTFMove(task));
+#if PLATFORM(MUI)
+    m_taskCondition.notifyOne();
+#endif
 }
 
 }
