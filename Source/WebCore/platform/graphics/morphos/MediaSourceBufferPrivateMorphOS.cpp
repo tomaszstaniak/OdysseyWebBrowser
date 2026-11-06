@@ -507,6 +507,11 @@ Ref<MediaPromise> MediaSourceBufferPrivateMorphOS::appendInternal(Ref<SharedBuff
 	EP_EVENT(append);
 	DAPPEND(dprintf("[MS][%c]%s bytes %lu main %d appendcnt %d\n", m_audioDecoderMask == 0 ?'V':'A', __func__, buffer->size(), isMainThread(), m_appendCount));
 
+    // terminate() drops the reader and clearMediaSource() the media source, but WebCore can still run an
+    // append it queued before the buffer was removed (YouTube replacing its MediaSource).
+    if (!m_reader || !m_mediaSource)
+        return MediaPromise::createAndReject(PlatformMediaError::BufferRemoved);
+
     m_appendPromise.emplace();
 
 	if (m_initializationBuffer.size() == 0)
@@ -723,6 +728,8 @@ void MediaSourceBufferPrivateMorphOS::willSeek(double time)
 	m_appendCount = 0;
 	m_mustAppendInitializationSegment = true;
 
+	if (!m_reader)
+		return;
 	m_reader->terminate();
 	m_reader = MediaSourceChunkReader::create(this,
 		[this](bool success, WebCore::SourceBufferPrivateClient::InitializationSegment& segment, MediaPlayerMorphOSInfo& info) {
@@ -751,7 +758,8 @@ bool MediaSourceBufferPrivateMorphOS::isSeeking() const
 
 void MediaSourceBufferPrivateMorphOS::signalEOF()
 {
-	m_reader->signalEOF();
+	if (m_reader)
+		m_reader->signalEOF();
 }
 
 void MediaSourceBufferPrivateMorphOS::setVolume(double vol)
