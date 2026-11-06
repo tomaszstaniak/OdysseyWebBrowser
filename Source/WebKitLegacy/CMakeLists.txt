@@ -59,4 +59,7 @@ WEBKIT_COPY_FILES(WebKitLegacy_CopyHeaders
 if (${PORT} STREQUAL "MUI")
     string(TIMESTAMP BUILD_DATE "%d.%m.%Y")
     add_definitions(-DOWB_BUILD_DATE="${BUILD_DATE}")
+    if (OWB_RELEASE_LABEL)
+        add_compile_definitions(OWB_RELEASE_LABEL="${OWB_RELEASE_LABEL}")
+    endif ()
 endif ()
