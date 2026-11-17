@@ -30,8 +30,6 @@
 #include <exec/lists.h>
 #include <aros/debug.h>
 #include <stdlib.h>
-#define DebugBase s_debugBase
-static struct Library *s_debugBase;
 #include <proto/debug.h>
 #include <libraries/debug.h>
 #include <proto/exec.h>
@@ -366,14 +364,15 @@ static void reportAnomaly(const Anomaly &a)
         return;
     STRPTR module = NULL, symbol = NULL;
     APTR symbolStart = NULL;
-    if (!s_debugBase)
-        s_debugBase = OpenLibrary((CONST_STRPTR)"debug.library", 1);
-    if (s_debugBase)
+    struct Library *DebugBase = OpenLibrary((CONST_STRPTR)"debug.library", 1);
+    if (DebugBase)
         DecodeLocation(a.caller, DL_ModuleName, (IPTR)&module, DL_SymbolName, (IPTR)&symbol,
                        DL_SymbolStart, (IPTR)&symbolStart, TAG_DONE);
     bug("[ExecAllocator] %s: address 0x%p pages %lu caller 0x%p %s %s+0x%lx (anomaly %d)\n",
         a.what, (APTR)a.addr, (unsigned long)a.count, a.caller, module ? (char *)module : "?",
         symbol ? (char *)symbol : "?", (unsigned long)((IPTR)a.caller - (IPTR)symbolStart), s_anomalies);
+    if (DebugBase)
+        CloseLibrary(DebugBase);
 }
 
 PageAllocator::PageBlock * PageAllocator::findBlock(IPTR addr)
